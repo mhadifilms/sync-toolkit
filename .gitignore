@@ -1,0 +1,24 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+
+# MacOS
+.DS_Store
+
+# Local env & secrets
+.env
+*.env
+
+# Tool outputs
+outputs/
+Scenes/
+uploaded_urls.txt
+
+# Logs
+*.log
