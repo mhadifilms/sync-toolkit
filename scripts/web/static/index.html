@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sync Toolkit Workflow Editor</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #1a1a1a;
+            color: #e0e0e0;
+            overflow: hidden;
+        }
+        
+        #app {
+            display: flex;
+            height: 100vh;
+        }
+        
+        #sidebar {
+            width: 300px;
+            background: #252525;
+            border-right: 1px solid #333;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+        
+        #sidebar-header {
+            padding: 16px;
+            border-bottom: 1px solid #333;
+            background: #2a2a2a;
+        }
+        
+        #sidebar-header h1 {
+            font-size: 18px;
+            margin-bottom: 8px;
+        }
+        
+        #node-search {
+            width: 100%;
+            padding: 8px;
+            background: #1a1a1a;
+            border: 1px solid #444;
+            border-radius: 4px;
+            color: #e0e0e0;
+            font-size: 14px;
+        }
+        
+        #node-categories {
+            flex: 1;
+            overflow-y: auto;
+            padding: 8px;
+        }
+        
+        .category {
+            margin-bottom: 16px;
+        }
+        
+        .category-title {
+            font-size: 12px;
+            font-weight: 600;
+            color: #888;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+            padding: 0 8px;
+        }
+        
+        .node-item {
+            padding: 10px;
+            margin: 4px 0;
+            background: #2a2a2a;
+            border: 1px solid #333;
+            border-radius: 4px;
+            cursor: grab;
+            transition: all 0.2s;
+        }
+        
+        .node-item:hover {
+            background: #333;
+            border-color: #555;
+        }
+        
+        .node-item:active {
+            cursor: grabbing;
+        }
+        
+        .node-item-title {
+            font-weight: 500;
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+        
+        .node-item-desc {
+            font-size: 11px;
+            color: #aaa;
+        }
+        
+        #canvas-container {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        #canvas {
+            width: 100%;
+            height: 100%;
+            background: #1a1a1a;
+            background-image: 
+                linear-gradient(#222 1px, transparent 1px),
+                linear-gradient(90deg, #222 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+        
+        .node {
+            position: absolute;
+            min-width: 200px;
+            background: #2a2a2a;
+            border: 2px solid #444;
+            border-radius: 8px;
+            cursor: move;
+            user-select: none;
+        }
+        
+        .node.selected {
+            border-color: #4a9eff;
+        }
+        
+        .node-header {
+            padding: 10px;
+            background: #333;
+            border-bottom: 1px solid #444;
+            border-radius: 6px 6px 0 0;
+            font-weight: 500;
+            font-size: 13px;
+        }
+        
+        .node-body {
+            padding: 12px;
+        }
+        
+        .node-input, .node-output {
+            display: flex;
+            align-items: center;
+            margin: 6px 0;
+            font-size: 12px;
+        }
+        
+        .node-input {
+            justify-content: space-between;
+        }
+        
+        .node-output {
+            justify-content: flex-end;
+        }
+        
+        .port {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            border: 2px solid #666;
+            background: #2a2a2a;
+            cursor: crosshair;
+        }
+        
+        .port.input {
+            margin-right: 8px;
+        }
+        
+        .port.output {
+            margin-left: 8px;
+        }
+        
+        .port:hover {
+            border-color: #4a9eff;
+            background: #4a9eff;
+        }
+        
+        input[type="text"], input[type="number"], select {
+            width: 100%;
+            padding: 4px 8px;
+            background: #1a1a1a;
+            border: 1px solid #444;
+            border-radius: 4px;
+            color: #e0e0e0;
+            font-size: 12px;
+        }
+        
+        #toolbar {
+            position: absolute;
+            top: 16px;
+            left: 16px;
+            display: flex;
+            gap: 8px;
+            z-index: 100;
+        }
+        
+        button {
+            padding: 8px 16px;
+            background: #4a9eff;
+            border: none;
+            border-radius: 4px;
+            color: white;
+            font-weight: 500;
+            cursor: pointer;
+            font-size: 13px;
+        }
+        
+        button:hover {
+            background: #5aaeff;
+        }
+        
+        button.secondary {
+            background: #444;
+        }
+        
+        button.secondary:hover {
+            background: #555;
+        }
+        
+        .connection {
+            stroke: #4a9eff;
+            stroke-width: 2;
+            fill: none;
+            pointer-events: none;
+        }
+        
+        #status {
+            position: absolute;
+            bottom: 16px;
+            left: 16px;
+            padding: 8px 12px;
+            background: #2a2a2a;
+            border: 1px solid #444;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+        
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <div id="sidebar">
+            <div id="sidebar-header">
+                <h1>Sync Toolkit</h1>
+                <input type="text" id="node-search" placeholder="Search nodes...">
+            </div>
+            <div id="node-categories"></div>
+        </div>
+        <div id="canvas-container">
+            <div id="toolbar">
+                <button id="btn-execute">Execute</button>
+                <button id="btn-validate" class="secondary">Validate</button>
+                <button id="btn-save" class="secondary">Save</button>
+                <button id="btn-load" class="secondary">Load</button>
+                <button id="btn-clear" class="secondary">Clear</button>
+            </div>
+            <svg id="canvas"></svg>
+            <div id="status">Ready</div>
+        </div>
+    </div>
+    
+    <script>
+        // Global state
+        let nodes = {};
+        let connections = [];
+        let selectedNode = null;
+        let dragging = false;
+        let connecting = null;
+        let nodeTypes = [];
+        
+        // Initialize
+        async function init() {
+            await loadNodeTypes();
+            renderNodePalette();
+            setupEventListeners();
+        }
+        
+        // Load available node types
+        async function loadNodeTypes() {
+            try {
+                const response = await fetch('/api/nodes');
+                const data = await response.json();
+                nodeTypes = data.nodes;
+            } catch (error) {
+                console.error('Failed to load nodes:', error);
+            }
+        }
+        
+        // Render node palette
+        function renderNodePalette() {
+            const container = document.getElementById('node-categories');
+            container.innerHTML = '';
+            
+            const search = document.getElementById('node-search').value.toLowerCase();
+            
+            // Group by category
+            const categories = {};
+            nodeTypes.forEach(node => {
+                if (search && !node.title.toLowerCase().includes(search) && 
+                    !node.description.toLowerCase().includes(search)) {
+                    return;
+                }
+                
+                const cat = node.category || 'other';
+                if (!categories[cat]) categories[cat] = [];
+                categories[cat].push(node);
+            });
+            
+            // Render categories
+            Object.keys(categories).sort().forEach(category => {
+                const catDiv = document.createElement('div');
+                catDiv.className = 'category';
+                
+                const title = document.createElement('div');
+                title.className = 'category-title';
+                title.textContent = category;
+                catDiv.appendChild(title);
+                
+                categories[category].forEach(node => {
+                    const item = document.createElement('div');
+                    item.className = 'node-item';
+                    item.draggable = true;
+                    item.innerHTML = `
+                        <div class="node-item-title">${node.title}</div>
+                        <div class="node-item-desc">${node.description}</div>
+                    `;
+                    
+                    item.addEventListener('dragstart', (e) => {
+                        e.dataTransfer.setData('nodeType', node.type);
+                    });
+                    
+                    catDiv.appendChild(item);
+                });
+                
+                container.appendChild(catDiv);
+            });
+        }
+        
+        // Setup event listeners
+        function setupEventListeners() {
+            const canvas = document.getElementById('canvas');
+            const container = document.getElementById('canvas-container');
+            
+            // Canvas drop
+            container.addEventListener('dragover', (e) => {
+                e.preventDefault();
+            });
+            
+            container.addEventListener('drop', (e) => {
+                e.preventDefault();
+                const nodeType = e.dataTransfer.getData('nodeType');
+                if (nodeType) {
+                    const rect = container.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const y = e.clientY - rect.top;
+                    createNode(nodeType, x, y);
+                }
+            });
+            
+            // Search
+            document.getElementById('node-search').addEventListener('input', renderNodePalette);
+            
+            // Toolbar buttons
+            document.getElementById('btn-execute').addEventListener('click', executeWorkflow);
+            document.getElementById('btn-validate').addEventListener('click', validateWorkflow);
+            document.getElementById('btn-save').addEventListener('click', saveWorkflow);
+            document.getElementById('btn-load').addEventListener('click', loadWorkflow);
+            document.getElementById('btn-clear').addEventListener('click', clearCanvas);
+        }
+        
+        // Create a node
+        function createNode(nodeType, x, y) {
+            const nodeInfo = nodeTypes.find(n => n.type === nodeType);
+            if (!nodeInfo) return;
+            
+            const nodeId = `node_${Date.now()}`;
+            const node = {
+                id: nodeId,
+                type: nodeType,
+                x: x,
+                y: y,
+                inputs: {},
+                nodeInfo: nodeInfo
+            };
+            
+            nodes[nodeId] = node;
+            renderNode(node);
+        }
+        
+        // Render a node
+        function renderNode(node) {
+            const canvas = document.getElementById('canvas');
+            let nodeEl = document.getElementById(`node-${node.id}`);
+            
+            if (!nodeEl) {
+                nodeEl = document.createElement('div');
+                nodeEl.id = `node-${node.id}`;
+                nodeEl.className = 'node';
+                canvas.parentElement.appendChild(nodeEl);
+            }
+            
+            nodeEl.style.left = node.x + 'px';
+            nodeEl.style.top = node.y + 'px';
+            
+            const header = document.createElement('div');
+            header.className = 'node-header';
+            header.textContent = node.nodeInfo.title;
+            
+            const body = document.createElement('div');
+            body.className = 'node-body';
+            
+            // Inputs
+            Object.keys(node.nodeInfo.inputs).forEach(inputName => {
+                const input = node.nodeInfo.inputs[inputName];
+                const div = document.createElement('div');
+                div.className = 'node-input';
+                
+                const port = document.createElement('div');
+                port.className = 'port input';
+                port.dataset.nodeId = node.id;
+                port.dataset.portName = inputName;
+                port.dataset.portType = 'input';
+                
+                const label = document.createElement('span');
+                label.textContent = inputName;
+                
+                let inputEl;
+                if (input.type === 'boolean') {
+                    inputEl = document.createElement('input');
+                    inputEl.type = 'checkbox';
+                    inputEl.checked = input.default || false;
+                } else if (input.type === 'integer' || input.type === 'float') {
+                    inputEl = document.createElement('input');
+                    inputEl.type = 'number';
+                    inputEl.value = input.default || '';
+                } else {
+                    inputEl = document.createElement('input');
+                    inputEl.type = 'text';
+                    inputEl.value = input.default || '';
+                    inputEl.placeholder = inputName;
+                }
+                
+                inputEl.addEventListener('change', () => {
+                    node.inputs[inputName] = inputEl.value;
+                });
+                
+                div.appendChild(port);
+                div.appendChild(label);
+                div.appendChild(inputEl);
+                body.appendChild(div);
+            });
+            
+            // Outputs
+            Object.keys(node.nodeInfo.outputs).forEach(outputName => {
+                const div = document.createElement('div');
+                div.className = 'node-output';
+                
+                const label = document.createElement('span');
+                label.textContent = outputName;
+                
+                const port = document.createElement('div');
+                port.className = 'port output';
+                port.dataset.nodeId = node.id;
+                port.dataset.portName = outputName;
+                port.dataset.portType = 'output';
+                
+                div.appendChild(label);
+                div.appendChild(port);
+                body.appendChild(div);
+            });
+            
+            nodeEl.innerHTML = '';
+            nodeEl.appendChild(header);
+            nodeEl.appendChild(body);
+            
+            // Make draggable
+            header.addEventListener('mousedown', (e) => {
+                selectedNode = node;
+                dragging = true;
+                const startX = e.clientX - node.x;
+                const startY = e.clientY - node.y;
+                
+                const onMove = (e) => {
+                    if (dragging && selectedNode === node) {
+                        node.x = e.clientX - startX;
+                        node.y = e.clientY - startY;
+                        renderNode(node);
+                    }
+                };
+                
+                const onUp = () => {
+                    dragging = false;
+                    document.removeEventListener('mousemove', onMove);
+                    document.removeEventListener('mouseup', onUp);
+                };
+                
+                document.addEventListener('mousemove', onMove);
+                document.addEventListener('mouseup', onUp);
+            });
+            
+            // Port connections
+            nodeEl.querySelectorAll('.port').forEach(port => {
+                port.addEventListener('mousedown', (e) => {
+                    e.stopPropagation();
+                    connecting = {
+                        nodeId: port.dataset.nodeId,
+                        portName: port.dataset.portName,
+                        portType: port.dataset.portType
+                    };
+                });
+            });
+            
+            nodeEl.addEventListener('click', () => {
+                document.querySelectorAll('.node').forEach(n => n.classList.remove('selected'));
+                nodeEl.classList.add('selected');
+                selectedNode = node;
+            });
+        }
+        
+        // Execute workflow
+        async function executeWorkflow() {
+            updateStatus('Executing workflow...');
+            try {
+                const workflow = serializeWorkflow();
+                const response = await fetch('/api/workflow/execute', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(workflow)
+                });
+                
+                const result = await response.json();
+                if (result.success) {
+                    updateStatus(`Execution complete in ${result.execution_time.toFixed(2)}s`);
+                } else {
+                    updateStatus(`Execution failed: ${Object.keys(result.errors).length} errors`);
+                    console.error(result.errors);
+                }
+            } catch (error) {
+                updateStatus('Execution error: ' + error.message);
+                console.error(error);
+            }
+        }
+        
+        // Validate workflow
+        async function validateWorkflow() {
+            try {
+                const workflow = serializeWorkflow();
+                const response = await fetch('/api/workflow/validate', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(workflow)
+                });
+                
+                const result = await response.json();
+                if (result.valid) {
+                    updateStatus('Workflow is valid');
+                } else {
+                    updateStatus(`Validation failed: ${result.errors.join(', ')}`);
+                }
+            } catch (error) {
+                updateStatus('Validation error: ' + error.message);
+            }
+        }
+        
+        // Save workflow
+        async function saveWorkflow() {
+            const path = prompt('Enter file path (e.g., workflows/my_workflow.json):');
+            if (!path) return;
+            
+            try {
+                const workflow = serializeWorkflow();
+                const response = await fetch(`/api/workflow/save?path=${encodeURIComponent(path)}`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(workflow)
+                });
+                
+                const result = await response.json();
+                if (result.success) {
+                    updateStatus(`Saved to ${result.path}`);
+                } else {
+                    updateStatus('Save failed');
+                }
+            } catch (error) {
+                updateStatus('Save error: ' + error.message);
+            }
+        }
+        
+        // Load workflow
+        async function loadWorkflow() {
+            const path = prompt('Enter file path:');
+            if (!path) return;
+            
+            try {
+                const response = await fetch(`/api/workflow/load?path=${encodeURIComponent(path)}`);
+                const workflow = await response.json();
+                deserializeWorkflow(workflow);
+                updateStatus(`Loaded ${path}`);
+            } catch (error) {
+                updateStatus('Load error: ' + error.message);
+            }
+        }
+        
+        // Clear canvas
+        function clearCanvas() {
+            if (confirm('Clear all nodes?')) {
+                nodes = {};
+                connections = [];
+                document.querySelectorAll('.node').forEach(n => n.remove());
+                document.getElementById('canvas').innerHTML = '';
+                updateStatus('Canvas cleared');
+            }
+        }
+        
+        // Serialize workflow
+        function serializeWorkflow() {
+            return {
+                nodes: Object.values(nodes).map(node => ({
+                    id: node.id,
+                    type: node.type,
+                    position: {x: node.x, y: node.y},
+                    inputs: node.inputs
+                })),
+                connections: connections
+            };
+        }
+        
+        // Deserialize workflow
+        function deserializeWorkflow(workflow) {
+            clearCanvas();
+            // Implementation would recreate nodes from workflow data
+        }
+        
+        // Update status
+        function updateStatus(message) {
+            document.getElementById('status').textContent = message;
+        }
+        
+        // Initialize on load
+        init();
+    </script>
+</body>
+</html>
+

@@ -245,6 +245,9 @@ All scripts are now Python-based with unified configuration:
 - **`transfer/`**: Storage upload/download scripts (Python)
 - **`utils/`**: Shared utilities and configuration
 - **`monitor/`**: Monitoring scripts (Python)
+- **`nodes/`**: Node-based workflow system (node definitions)
+- **`engine/`**: Workflow execution engine
+- **`workflows/`**: Workflow serialization and examples
 
 ### Bash Scripts
 
@@ -256,3 +259,53 @@ Some bash scripts (`.sh` files) are kept for video processing operations that wo
 - `common.sh` - Common bash utilities (library, not a command)
 
 All commands are accessible via the unified CLI.
+
+## Node-Based Workflow System
+
+The toolkit now includes a **ComfyUI-style visual web editor** for creating and executing workflows!
+
+### Quick Start - Web UI
+
+```bash
+# Start the web UI server
+python scripts/sync_toolkit.py workflow ui
+
+# Then open http://127.0.0.1:8000 in your browser
+```
+
+The web UI provides:
+- **Drag-and-drop node creation** - Browse nodes in sidebar and drag onto canvas
+- **Visual connections** - Connect nodes by clicking ports
+- **Node configuration** - Edit node properties inline
+- **Workflow execution** - Execute workflows with real-time feedback
+- **Save/Load** - Save workflows as JSON files
+
+### CLI Usage
+
+```bash
+# List all available node types
+python scripts/sync_toolkit.py workflow list-nodes
+
+# Execute a workflow
+python scripts/sync_toolkit.py workflow execute workflows/examples/simple_scene_detection.json
+
+# Validate a workflow
+python scripts/sync_toolkit.py workflow validate workflows/examples/simple_scene_detection.json
+```
+
+### Features
+
+- **Visual Workflow Design**: Drag-and-drop interface in browser
+- **Reusability**: Save and share workflows as JSON files
+- **Parallel Execution**: Automatic dependency resolution and parallel processing
+- **Result Caching**: Incremental execution for faster iterations
+- **Backward Compatible**: Nodes wrap existing CLI scripts
+
+### Installation
+
+Install web UI dependencies:
+```bash
+pip install -r scripts/web/requirements.txt
+```
+
+See [workflows/README.md](scripts/workflows/README.md) for detailed documentation.

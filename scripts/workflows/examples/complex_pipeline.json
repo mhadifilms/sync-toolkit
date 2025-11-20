@@ -1,0 +1,100 @@
+{
+  "version": "1.0",
+  "metadata": {
+    "name": "Complex Lipsync Pipeline",
+    "description": "Complete pipeline: Load video/audio → Chunk → Upload → Process → Download → Bounce"
+  },
+  "nodes": [
+    {
+      "id": "load_video",
+      "type": "LoadVideoNode",
+      "position": {"x": 100, "y": 100},
+      "inputs": {
+        "video_path": "/path/to/master.mov"
+      }
+    },
+    {
+      "id": "load_audio",
+      "type": "LoadAudioNode",
+      "position": {"x": 100, "y": 200},
+      "inputs": {
+        "audio_path": "/path/to/master.wav"
+      }
+    },
+    {
+      "id": "extract_audio",
+      "type": "ExtractAudioNode",
+      "position": {"x": 300, "y": 100},
+      "inputs": {}
+    },
+    {
+      "id": "upload_s3",
+      "type": "UploadS3Node",
+      "position": {"x": 500, "y": 100},
+      "inputs": {
+        "s3_destination": "s3://bucket-name/scenes/",
+        "parallel": 8
+      }
+    },
+    {
+      "id": "create_manifest",
+      "type": "CreateManifestNode",
+      "position": {"x": 700, "y": 100},
+      "inputs": {
+        "output_file": "uploaded_urls.txt"
+      }
+    },
+    {
+      "id": "batch_lipsync",
+      "type": "BatchLipsyncNode",
+      "position": {"x": 900, "y": 100},
+      "inputs": {
+        "max_workers": 15,
+        "output_dir": "./outputs"
+      }
+    },
+    {
+      "id": "download_s3",
+      "type": "DownloadS3Node",
+      "position": {"x": 1100, "y": 100},
+      "inputs": {
+        "local_destination": "./downloads",
+        "mode": "json",
+        "parallel": 10
+      }
+    },
+    {
+      "id": "bounce_video",
+      "type": "BounceVideoNode",
+      "position": {"x": 1300, "y": 100},
+      "inputs": {}
+    }
+  ],
+  "connections": [
+    {
+      "from": {"node": "load_video", "output": "video_path"},
+      "to": {"node": "extract_audio", "input": "video_directory"}
+    },
+    {
+      "from": {"node": "extract_audio", "output": "audio_directory"},
+      "to": {"node": "upload_s3", "input": "local_directory"}
+    },
+    {
+      "from": {"node": "upload_s3", "output": "uploaded_urls"},
+      "to": {"node": "create_manifest", "input": "video_urls"}
+    },
+    {
+      "from": {"node": "create_manifest", "output": "manifest_file"},
+      "to": {"node": "batch_lipsync", "input": "manifest_file"}
+    },
+    {
+      "from": {"node": "batch_lipsync", "output": "output_directory"},
+      "to": {"node": "download_s3", "input": "s3_source"}
+    },
+    {
+      "from": {"node": "download_s3", "output": "downloaded_directory"},
+      "to": {"node": "bounce_video", "input": "video_directory"}
+    }
+  ]
+}
+

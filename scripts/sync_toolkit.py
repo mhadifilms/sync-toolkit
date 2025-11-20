@@ -160,6 +160,27 @@ For help, see: USER_GUIDE.md
     config_parser = subparsers.add_parser('config', help='Configure credentials')
     config_parser.add_argument('--clear', action='store_true', help='Clear stored credentials')
     
+    # Node workflow commands
+    workflow_parser = subparsers.add_parser('workflow', help='Node-based workflow commands')
+    workflow_subparsers = workflow_parser.add_subparsers(dest='workflow_command', help='Workflow commands')
+    
+    workflow_list_parser = workflow_subparsers.add_parser('list-nodes', help='List all available node types')
+    
+    workflow_execute_parser = workflow_subparsers.add_parser('execute', help='Execute a workflow')
+    workflow_execute_parser.add_argument('workflow', help='Path to workflow JSON file')
+    workflow_execute_parser.add_argument('--max-workers', type=int, default=4, help='Maximum parallel node executions')
+    workflow_execute_parser.add_argument('--no-cache', dest='cache', action='store_false', help='Disable result caching')
+    workflow_execute_parser.add_argument('--output', help='Save execution results to file')
+    workflow_execute_parser.set_defaults(cache=True)
+    
+    workflow_validate_parser = workflow_subparsers.add_parser('validate', help='Validate a workflow file')
+    workflow_validate_parser.add_argument('workflow', help='Path to workflow JSON file')
+    
+    workflow_ui_parser = workflow_subparsers.add_parser('ui', help='Start web UI server')
+    workflow_ui_parser.add_argument('--host', default='127.0.0.1', help='Host to bind to')
+    workflow_ui_parser.add_argument('--port', type=int, default=8000, help='Port to bind to')
+    workflow_ui_parser.add_argument('--reload', action='store_true', help='Enable auto-reload')
+    
     args = parser.parse_args()
     
     if not args.command:
@@ -319,6 +340,35 @@ For help, see: USER_GUIDE.md
                 print("Configuration is stored at:", config_manager.CONFIG_FILE)
                 print("\nCredentials will be prompted when needed.")
                 print("Use --clear to remove stored credentials.")
+        elif args.command == 'workflow':
+            if args.workflow_command == 'ui':
+                # Start web UI server
+                from web.server import main as web_main
+                import sys
+                original_argv = sys.argv
+                sys.argv = ['web.server'] + [
+                    '--host', args.host,
+                    '--port', str(args.port)
+                ]
+                if args.reload:
+                    sys.argv.append('--reload')
+                try:
+                    web_main()
+                finally:
+                    sys.argv = original_argv
+            else:
+                # Import workflow CLI
+                from workflows.cli import main as workflow_main
+                # Adjust sys.argv to pass workflow subcommand
+                import sys
+                original_argv = sys.argv
+                # Remove 'workflow' from argv and replace with workflow command
+                workflow_argv = ['workflow_cli.py'] + original_argv[2:]
+                sys.argv = workflow_argv
+                try:
+                    workflow_main()
+                finally:
+                    sys.argv = original_argv
     except KeyboardInterrupt:
         print("\n\nOperation cancelled by user.")
         sys.exit(1)
