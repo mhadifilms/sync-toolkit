@@ -1,0 +1,6 @@
+Project Name,Event Id,Event Name,Event Creator,Description,Event Start Time,Event End Time,Event Duration,Event Runtime,Event Tag,Category,Character,Presentation,Comment Owner,Comment Text,Comment Created At,Event URL
+project_name.mid,1,Vub,Automation,Vub,00:00:15:01,00:00:17:07,00:00:02:06,2s 6f,,Video,,Primary Presentation,,,,
+project_name.mid,2,Edge Case,Automation,Edge Case,00:00:19:07,00:00:21:04,00:00:01:21,1s 21f,,Video,,Primary Presentation,,,,
+project_name.mid,3,Vub Critical,Automation,Vub Critical,00:00:28:13,00:00:31:23,00:00:03:10,3s 10f,,Video,,Primary Presentation,,,,
+project_name.mid,4,Vub,Automation,Vub,00:00:33:23,00:00:35:17,00:00:01:18,1s 18f,,Video,,Primary Presentation,,,,
+

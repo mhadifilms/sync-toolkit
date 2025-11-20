@@ -2,6 +2,11 @@
 import os, re, sys, math, csv, shlex, subprocess
 from pathlib import Path
 
+# Add parent directory to path for utils
+SCRIPT_DIR = Path(__file__).parent.parent.resolve()
+sys.path.insert(0, str(SCRIPT_DIR))
+from utils.common import normalize_path, prompt_path, print_section
+
 # ------- Tunables -------
 PSD_THRESHOLD = 22.0        # PySceneDetect sensitivity (lower = more cuts). Try 18–28.
 PSD_MIN_FRAMES = 8          # Min scene length in frames (~0.33s @24fps)
@@ -19,25 +24,10 @@ def need(tool):
         print(f"{tool} not found on PATH. Install it (e.g., brew install ffmpeg).", file=sys.stderr)
         sys.exit(1)
 
+# norm_path is now handled by normalize_path in utils.common
 def norm_path(user_input: str) -> str:
-    """
-    Accepts raw input from paste/drag-and-drop.
-    Supports:
-      - Backslash-escaped spaces (Finder → Terminal):   /path/with\ spaces/file.mov
-      - Quoted paths:                                   "/path/with spaces/file.mov"
-    """
-    s = (user_input or "").strip()
-    # If there are backslash-escapes or quotes, shlex.split resolves them.
-    try:
-        parts = shlex.split(s)
-        if len(parts) >= 1:
-            s = parts[0]
-    except Exception:
-        # Fallback: unescape spaces only
-        s = s.replace(r"\ ", " ")
-    s = os.path.expanduser(s)
-    s = os.path.abspath(s)
-    return s
+    """Legacy wrapper for normalize_path"""
+    return str(normalize_path(user_input))
 
 def ffprobe_duration(path):
     rc,out,err = run(["ffprobe","-v","error","-show_entries","format=duration",
@@ -176,12 +166,10 @@ def main():
 
     # --- VIDEO path (drag-and-drop friendly) ---
     try:
-        raw_video = input("Drop/paste VIDEO path and press Enter: ")
-    except EOFError:
-        print("No video path provided.", file=sys.stderr); sys.exit(1)
-    video_in = norm_path(raw_video)
-    if not os.path.exists(video_in):
-        print(f"Not found: {video_in}", file=sys.stderr); sys.exit(1)
+        video_in = prompt_path("Drop/paste VIDEO path and press Enter", must_exist=True)
+    except (EOFError, KeyboardInterrupt):
+        print("\nNo video path provided.", file=sys.stderr)
+        sys.exit(1)
 
     print("\n--- scene_slicer_v3 (drag-drop) ---")
     print(f"Video: {video_in}")
@@ -233,13 +221,14 @@ def main():
 
     # --- AUDIO path (drag-and-drop friendly) ---
     try:
-        raw_audio = input("\nDrop/paste matching AUDIO (WAV) path and press Enter (or leave blank to skip): ")
-    except EOFError:
+        raw_audio = input("\nDrop/paste matching AUDIO (WAV) path and press Enter (or leave blank to skip): ").strip()
+    except (EOFError, KeyboardInterrupt):
         raw_audio = ""
-    if raw_audio.strip():
-        audio_in = norm_path(raw_audio)
-        if not os.path.exists(audio_in):
-            print(f"Audio not found: {audio_in}", file=sys.stderr); sys.exit(1)
+    if raw_audio:
+        audio_in = normalize_path(raw_audio)
+        if not audio_in.exists():
+            print(f"Audio not found: {audio_in}", file=sys.stderr)
+            sys.exit(1)
         pcm_codec = probe_audio_pcm(audio_in)
         print(f"Detected/selected PCM codec: {pcm_codec}")
         print("Splitting AUDIO (PCM, no compression)…")

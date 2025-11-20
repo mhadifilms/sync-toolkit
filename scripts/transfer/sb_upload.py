@@ -31,25 +31,22 @@ import pathlib
 import concurrent.futures as cf
 from datetime import datetime
 from typing import Iterable, List, Tuple, Dict
-try:
-    from dotenv import load_dotenv  # type: ignore
-except Exception:
-    load_dotenv = None
+from pathlib import Path
+
 import requests
+
+# Add parent directory to path for utils
+SCRIPT_DIR = Path(__file__).parent.parent.resolve()
+sys.path.insert(0, str(SCRIPT_DIR))
+from utils.config import get_config_manager
+from utils.common import prompt_path, normalize_path, print_section, write_manifest, natural_sort_key
 
 HOST = ""
 BUCKET = ""
 
 # ---------- Helpers ----------
 
-def clean_dragdrop_path(p: str) -> str:
-    p = p.strip()
-    if (p.startswith('"') and p.endswith('"')) or (p.startswith("'") and p.endswith("'")):
-        p = p[1:-1]
-    p = p.replace('\\ ', ' ')
-    if len(p) > 1 and p.endswith('/'):
-        p = p[:-1]
-    return p
+# clean_dragdrop_path is now handled by normalize_path in utils.common
 
 def iter_files(root: pathlib.Path) -> Iterable[pathlib.Path]:
     if root.is_file():
@@ -64,10 +61,8 @@ def iter_files(root: pathlib.Path) -> Iterable[pathlib.Path]:
                 continue
             yield p
 
-def slugify_name(name: str) -> str:
-    # Keep letters, numbers, '-', '_'; replace spaces with '_'
-    name = name.strip().replace(' ', '_')
-    return re.sub(r'[^A-Za-z0-9_\-]+', '-', name)
+# slugify_name is now handled by slugify in utils.common
+from utils.common import slugify as slugify_name
 
 def rel_path(file_path: pathlib.Path, base: pathlib.Path) -> str:
     return file_path.relative_to(base).as_posix() if base.is_dir() else file_path.name
@@ -125,57 +120,46 @@ def supabase_upload(
         time.sleep(backoff)
         backoff = min(backoff * 2, 8.0)
 
-def natural_key(s: str):
-    return [int(t) if t.isdigit() else t.lower() for t in re.findall(r'\d+|\D+', s)]
+# natural_key is now imported from utils.common
 
 # ---------- Main ----------
 
 def main():
-    # Load .env if available
-    if load_dotenv is not None:
-        try:
-            load_dotenv()
-        except Exception:
-            pass
     parser = argparse.ArgumentParser(description="Upload to Supabase Storage without overwrite; timestamped prefix; write URL manifest.")
     parser.add_argument("path", nargs="?", help="Folder or file to upload (supports drag & drop if omitted).")
     parser.add_argument("--concurrency", type=int, default=4, help="Parallel uploads (default 4).")
     parser.add_argument("--timeout", type=float, default=120.0, help="Per-request timeout seconds.")
     parser.add_argument("--dry-run", action="store_true", help="List planned uploads; do not send.")
-    parser.add_argument("--key-env", default=None, help="Env var name for the API key. Defaults to SUPABASE_SERVICE_ROLE or SUPABASE_KEY.")
-    parser.add_argument("--host", default=None, help="Supabase project host, e.g. https://xyz.supabase.co (or set SUPABASE_HOST)")
-    parser.add_argument("--bucket", default=None, help="Supabase storage bucket name (or set SUPABASE_BUCKET)")
+    parser.add_argument("--host", default=None, help="Supabase project host, e.g. https://xyz.supabase.co")
+    parser.add_argument("--bucket", default=None, help="Supabase storage bucket name")
     args = parser.parse_args()
 
+    # Get Supabase configuration (prompts if needed)
+    config_manager = get_config_manager()
+    storage_config = config_manager.get_supabase_config(prompt=True)
+    
     # Resolve Host/Bucket
     global HOST, BUCKET
-    HOST = (args.host or os.getenv("SUPABASE_HOST") or "").strip().rstrip("/")
-    BUCKET = (args.bucket or os.getenv("SUPABASE_BUCKET") or "").strip()
+    HOST = (args.host or storage_config.supabase_host or "").strip().rstrip("/")
+    BUCKET = (args.bucket or storage_config.supabase_bucket or "").strip()
+    
     if not HOST or not BUCKET:
-        print("Error: Set --host/--bucket or SUPABASE_HOST/SUPABASE_BUCKET.", file=sys.stderr)
+        print("Error: Supabase host and bucket are required.", file=sys.stderr)
+        print("Please provide via --host/--bucket flags or configure interactively.", file=sys.stderr)
         sys.exit(2)
 
-    # API key resolution
-    key_envs = [args.key_env] if args.key_env else ["SUPABASE_SERVICE_ROLE", "SUPABASE_KEY"]
-    key = None
-    for env_name in key_envs:
-        if env_name and os.getenv(env_name):
-            key = os.getenv(env_name)
-            break
+    # Get API key
+    key = storage_config.supabase_key
     if not key:
-        print("Error: Set SUPABASE_SERVICE_ROLE or SUPABASE_KEY.", file=sys.stderr)
+        print("Error: Supabase service role key is required.", file=sys.stderr)
         sys.exit(2)
 
-    # Input path (drag & drop prompt if missing)
-    input_path = args.path
-    if not input_path:
-        try:
-            input_path = input("Drop/paste folder or file and press Enter: ").strip()
-        except KeyboardInterrupt:
-            print("\nCancelled.")
-            sys.exit(1)
-    input_path = clean_dragdrop_path(input_path)
-    base = pathlib.Path(input_path).expanduser().resolve()
+    # Input path (prompt if missing)
+    if args.path:
+        base = normalize_path(args.path)
+    else:
+        base = prompt_path("Enter folder or file to upload", must_exist=True)
+    
     if not base.exists():
         print(f"Not found: {base}", file=sys.stderr)
         sys.exit(2)
@@ -238,21 +222,15 @@ def main():
 
     # Sort URLs naturally by filename portion
     def sort_by_filename(urls: List[str]) -> List[str]:
-        return sorted(urls, key=lambda u: natural_key(u.rsplit('/', 1)[-1]))
+        return sorted(urls, key=lambda u: natural_sort_key(u.rsplit('/', 1)[-1]))
 
     video_urls = sort_by_filename(ok_urls["video"])
     audio_urls = sort_by_filename(ok_urls["audio"])
 
     # Write manifest text file in the current working directory
-    out_dir = pathlib.Path.cwd()
-    manifest_path = out_dir / f"uploaded_urls.txt"
-    with open(manifest_path, "w", encoding="utf-8") as f:
-        f.write("VIDEOS\n")
-        for u in video_urls:
-            f.write(u + "\n")
-        f.write("\nAUDIOS\n")
-        for u in audio_urls:
-            f.write(u + "\n")
+    out_dir = Path.cwd()
+    manifest_path = out_dir / "uploaded_urls.txt"
+    write_manifest(video_urls, audio_urls, manifest_path)
 
     print("\n--- Upload complete ---")
     print(f"Remote base prefix: {remote_prefix}")

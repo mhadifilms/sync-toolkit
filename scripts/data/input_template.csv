@@ -1,0 +1,6 @@
+,VIDEO,AUDIO,ASD,SCENE
+0,s3://bucket-name/path/to/video1.mov,s3://bucket-name/path/to/audio1.wav,Yes,1
+1,s3://bucket-name/path/to/video2.mov,s3://bucket-name/path/to/audio2.wav,Yes,2
+2,s3://bucket-name/path/to/video3.mov,s3://bucket-name/path/to/audio3.wav,No,3
+3,s3://bucket-name/path/to/video4.mov,s3://bucket-name/path/to/audio4.wav,Yes,4
+

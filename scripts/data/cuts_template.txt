@@ -1,0 +1,11 @@
+# name   start           end
+# Format: name<TAB>start_time<TAB>end_time
+# Times can be in format: HH:MM:SS.mmm or HH:MM:SS:FF (timecode)
+# Lines starting with # are comments
+
+clip_001        00:00:09.02    00:03:39.08
+clip_002        00:04:24.20    00:06:29.03
+clip_003        00:06:29.04    00:08:27.19
+clip_004        00:08:27.20    00:10:30.02
+clip_005        00:10:30.03    00:13:58.02
+

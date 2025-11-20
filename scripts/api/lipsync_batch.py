@@ -38,10 +38,12 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 
 import requests
 from tqdm import tqdm
-try:
-    from dotenv import load_dotenv  # type: ignore
-except Exception:
-    load_dotenv = None
+
+# Add parent directory to path for utils
+SCRIPT_DIR = Path(__file__).parent.parent.resolve()
+sys.path.insert(0, str(SCRIPT_DIR))
+from utils.config import get_config_manager
+from utils.common import parse_manifest, prompt_path, print_section
 
 API_BASE = "https://api.sync.so/v2"
 GENERATE_URL = f"{API_BASE}/generate"
@@ -290,7 +292,7 @@ def process_index(
 
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description="Parallel Sync lipsync URL batcher (manifest-based)")
-    p.add_argument("--manifest", default="./uploaded_urls.txt", help="Path to uploaded_urls.txt containing VIDEOS/AUDIOS URLs")
+    p.add_argument("--manifest", default=None, help="Path to uploaded_urls.txt containing VIDEOS/AUDIOS URLs")
     p.add_argument("--start", type=int, default=1, help="Start index (inclusive)")
     p.add_argument("--end", type=int, default=28, help="End index (inclusive)")
     p.add_argument("--max-workers", type=int, default=15, help="Parallel jobs (clamped to 1..15)")
@@ -299,66 +301,26 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--verbose", action="store_true", help="Verbose logging")
     return p.parse_args()
 
-def parse_manifest(manifest_path: Path) -> Tuple[List[str], List[str]]:
-    """Parse uploaded_urls.txt into ordered video and audio URL lists.
-
-    - Skips AppleDouble entries starting with '._'
-    - Preserves file order from the manifest
-    """
-    videos: List[str] = []
-    audios: List[str] = []
-    if not manifest_path.exists():
-        raise FileNotFoundError(f"Manifest not found: {manifest_path}")
-    mode: Optional[str] = None
-    with open(manifest_path, "r", encoding="utf-8") as f:
-        for raw in f:
-            line = raw.strip()
-            if not line:
-                continue
-            upper = line.upper()
-            if upper == "VIDEOS":
-                mode = "v"; continue
-            if upper == "AUDIOS":
-                mode = "a"; continue
-            if mode == "v":
-                name = line.rsplit('/', 1)[-1]
-                if not name.startswith("._"):
-                    videos.append(line)
-            elif mode == "a":
-                name = line.rsplit('/', 1)[-1]
-                if not name.startswith("._"):
-                    audios.append(line)
-    # De-duplicate while preserving order
-    def dedup(seq: List[str]) -> List[str]:
-        seen: Dict[str, bool] = {}
-        out: List[str] = []
-        for s in seq:
-            if s in seen:
-                continue
-            seen[s] = True
-            out.append(s)
-        return out
-    videos = dedup(videos)
-    audios = dedup(audios)
-    return videos, audios
+# parse_manifest is now imported from utils.common
 
 def main() -> None:
-    if load_dotenv is not None:
-        try:
-            load_dotenv()
-        except Exception:
-            pass
     args = parse_args()
     logging.basicConfig(
         level=logging.DEBUG if args.verbose else logging.INFO,
         format="%(asctime)s | %(levelname)s | %(message)s"
     )
 
-    api_key = os.getenv("SYNC_API_KEY", "").strip()
+    # Get API key from config manager (prompts if needed)
+    config_manager = get_config_manager()
+    api_key = config_manager.get_sync_api_key(prompt=True)
     if not api_key:
-        print("ERROR: SYNC_API_KEY is not set.", file=sys.stderr)
+        print("ERROR: Sync API key is required.", file=sys.stderr)
         sys.exit(1)
 
+    # Set default end if not provided
+    if not args.end:
+        args.end = 28  # Default end index
+    
     if args.start < 1 or args.end < args.start:
         print("ERROR: invalid start/end range.", file=sys.stderr)
         sys.exit(2)
@@ -367,7 +329,12 @@ def main() -> None:
     workers = max(1, min(int(args.max_workers), 15))
 
     # Read manifest and build URL lists
-    manifest_path = Path(args.manifest).expanduser().resolve()
+    if args.manifest:
+        manifest_path = Path(args.manifest).expanduser().resolve()
+    else:
+        # Prompt for manifest if not provided
+        manifest_path = prompt_path("Enter path to manifest file (uploaded_urls.txt)", must_exist=True)
+    
     try:
         video_urls, audio_urls = parse_manifest(manifest_path)
     except Exception as e:
