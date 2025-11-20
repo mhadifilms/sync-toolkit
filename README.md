@@ -1,4 +1,4 @@
-# Sync Toolkit
+# sync. toolkit
 
 A unified toolkit for bulk lipsync processing with Sync.so API. This toolkit provides a cohesive set of scripts that work together seamlessly, with interactive configuration and support for various input types.
 
@@ -9,21 +9,6 @@ A unified toolkit for bulk lipsync processing with Sync.so API. This toolkit pro
 - **Flexible Inputs**: Supports various file formats, URLs, and storage backends
 - **Interactive Prompts**: User-friendly prompts for missing configuration
 - **Storage Agnostic**: Works with Supabase Storage, AWS S3, and more
-
-## Installation
-
-```bash
-# Clone the repository
-git clone <repository-url>
-cd sync-toolkit
-
-# Install Python dependencies
-pip install -r requirements.txt
-pip install -r scripts/requirements.txt
-
-# Make scripts executable (optional)
-chmod +x scripts/sync_toolkit.py
-```
 
 ## Quick Start
 
@@ -51,6 +36,9 @@ This detects scene boundaries and splits video/audio into segments.
 
 ### 3. Upload to Storage
 
+You can upload to either Supabase Storage or AWS S3:
+
+**Supabase Storage:**
 ```bash
 # Upload to Supabase Storage (prompts for config if needed)
 python scripts/sync_toolkit.py upload ./Scenes
@@ -59,7 +47,16 @@ python scripts/sync_toolkit.py upload ./Scenes
 python scripts/transfer/sb_upload.py ./Scenes
 ```
 
-This uploads files and creates a manifest (`uploaded_urls.txt`) with VIDEOS/AUDIOS sections.
+**AWS S3:**
+```bash
+# Upload to S3 (prompts for AWS credentials if needed)
+python scripts/sync_toolkit.py s3-upload ./Scenes s3://bucket-name/path/
+
+# Or use the script directly
+python scripts/transfer/s3_upload.py ./Scenes s3://bucket-name/path/
+```
+
+Both methods upload files and can create manifests for batch processing.
 
 ### 4. Run Batch Lipsync Processing
 
@@ -89,8 +86,8 @@ python scripts/sync_toolkit.py process-csv --csv input.csv --test
 # Detect and split scenes
 python scripts/sync_toolkit.py detect-scenes
 
-# Upload files to storage
-python scripts/sync_toolkit.py upload [path] [--storage supabase|s3]
+# Upload to Supabase Storage
+python scripts/sync_toolkit.py upload ./Scenes
 
 # Upload to S3
 python scripts/sync_toolkit.py s3-upload ./Scenes s3://bucket/path/
@@ -118,6 +115,10 @@ python scripts/sync_toolkit.py chunk video.mov audio.wav cuts.txt ./output/
 python scripts/sync_toolkit.py bounce ./videos/ --output ./bounced/
 python scripts/sync_toolkit.py extract-audio ./videos/
 python scripts/sync_toolkit.py rename ./output/
+
+# Utility commands
+python scripts/sync_toolkit.py convert-timecodes --input-csv input.csv --output-csv output.csv --source-fps 24 --target-fps 23.976
+python scripts/sync_toolkit.py convert-timecodes --timecode "00:00:15:01" --source-fps 24 --target-fps 23.976
 
 # Configure credentials
 python scripts/sync_toolkit.py config [--clear]
@@ -172,8 +173,10 @@ python scripts/sync_toolkit.py config --clear
 # 1. Detect scenes
 python scripts/sync_toolkit.py detect-scenes
 
-# 2. Upload to storage
-python scripts/sync_toolkit.py upload ./Scenes
+# 2. Upload to storage (Supabase or S3)
+python scripts/sync_toolkit.py upload ./Scenes                    # Supabase
+# OR
+python scripts/sync_toolkit.py s3-upload ./Scenes s3://bucket/path/  # S3
 
 # 3. Process batch
 python scripts/sync_toolkit.py batch --manifest uploaded_urls.txt
@@ -186,7 +189,7 @@ python scripts/sync_toolkit.py batch --manifest uploaded_urls.txt
 python scripts/sync_toolkit.py process-csv --csv input.csv
 
 # 2. Download results (if needed)
-python scripts/transfer/download.sh --mode json sync_results.json ./outputs
+python scripts/sync_toolkit.py s3-download sync_results.json ./outputs --mode json
 ```
 
 ### Face-Based Organization
@@ -232,6 +235,8 @@ All scripts are now Python-based with unified configuration:
 
 - **`utils/config.py`**: Unified configuration management with interactive prompts
 - **`utils/common.py`**: Common utilities (path handling, manifest parsing, etc.)
+- **`utils/timecode.py`**: Timecode conversion utilities (supports any frame rate: 24, 23.976, 25, 29.97, 30, 50, 59.94, 60, etc.)
+- **`utils/common.sh`**: Bash utility functions (used by bash scripts)
 
 ### Script Organization
 
@@ -247,9 +252,10 @@ Some bash scripts (`.sh` files) are kept for video processing operations that wo
 - `chunk.sh` - Video/audio chunking
 - `bounce.sh` - Video bouncing
 - `extract_audio.sh` - Audio extraction
-- `rename.sh` - File renaming
+- `rename.sh` - File renaming (in `utils/`)
+- `common.sh` - Common bash utilities (library, not a command)
 
-All are accessible via the unified CLI.
+All commands are accessible via the unified CLI.
 
 ## Security Notes
 

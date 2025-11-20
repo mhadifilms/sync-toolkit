@@ -144,6 +144,18 @@ For help, see: USER_GUIDE.md
     rename_parser.add_argument('--dry-run', '-n', action='store_true', help='Dry run')
     rename_parser.add_argument('--verbose', '-v', action='store_true', help='Verbose output')
     
+    # Convert timecodes command
+    convert_tc_parser = subparsers.add_parser('convert-timecodes', help='Convert timecodes between frame rates')
+    convert_tc_parser.add_argument('--input-csv', type=str, help='Input CSV file with timecodes')
+    convert_tc_parser.add_argument('--output-csv', type=str, help='Output CSV file with converted timecodes')
+    convert_tc_parser.add_argument('--timecode', type=str, help='Single timecode to convert (format: HH:MM:SS:FF)')
+    convert_tc_parser.add_argument('--source-fps', type=str, required=True, help='Source frame rate (e.g., 24, 23.976, 25, 29.97, 30, 50, 59.94, 60)')
+    convert_tc_parser.add_argument('--target-fps', type=str, required=True, help='Target frame rate (e.g., 24, 23.976, 25, 29.97, 30, 50, 59.94, 60)')
+    convert_tc_parser.add_argument('--start-column', type=str, default='Event Start Time', help='CSV column name for start timecode')
+    convert_tc_parser.add_argument('--end-column', type=str, default='Event End Time', help='CSV column name for end timecode')
+    convert_tc_parser.add_argument('--duration-column', type=str, default='Event Duration', help='CSV column name for duration')
+    convert_tc_parser.add_argument('--preserve-time', action='store_true', help='Preserve time values instead of frame numbers')
+    
     # Config command
     config_parser = subparsers.add_parser('config', help='Configure credentials')
     config_parser.add_argument('--clear', action='store_true', help='Clear stored credentials')
@@ -273,6 +285,31 @@ For help, see: USER_GUIDE.md
                 cmd.append('--verbose')
             cmd.append(args.directory)
             subprocess.run(cmd)
+        elif args.command == 'convert-timecodes':
+            import sys
+            original_argv = sys.argv
+            # Build argument list
+            cmd_args = ['timecode.py']
+            if args.input_csv:
+                cmd_args.extend(['--input-csv', args.input_csv])
+            if args.output_csv:
+                cmd_args.extend(['--output-csv', args.output_csv])
+            if args.timecode:
+                cmd_args.extend(['--timecode', args.timecode])
+            cmd_args.extend(['--source-fps', args.source_fps])
+            cmd_args.extend(['--target-fps', args.target_fps])
+            if args.start_column:
+                cmd_args.extend(['--start-column', args.start_column])
+            if args.end_column:
+                cmd_args.extend(['--end-column', args.end_column])
+            if args.duration_column:
+                cmd_args.extend(['--duration-column', args.duration_column])
+            if args.preserve_time:
+                cmd_args.append('--preserve-time')
+            sys.argv = cmd_args
+            from utils.timecode import main as convert_tc_main
+            convert_tc_main()
+            sys.argv = original_argv
         elif args.command == 'config':
             config_manager = get_config_manager()
             if args.clear:

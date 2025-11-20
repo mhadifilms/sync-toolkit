@@ -1,4 +1,4 @@
-# Sync Toolkit Scripts
+# sync. toolkit scripts
 
 This directory contains all scripts for the Sync Toolkit, organized by functionality.
 
@@ -58,12 +58,11 @@ python scripts/sync_toolkit.py <command> [options]
 **Python Modules:**
 - **`config.py`**: Unified configuration management
 - **`common.py`**: Shared utilities and helpers
-- **`timecode.py`**: Timecode conversion utilities
-- **`convert_csv_timecodes.py`**: CSV timecode conversion
+- **`timecode.py`**: Timecode conversion utilities (supports any frame rate: 24, 23.976, 25, 29.97, 30, 50, 59.94, 60, etc.)
 
 **Bash Scripts:**
-- **`common.sh`**: Common bash utilities (used by bash scripts)
-- **`rename.sh`**: Rename files sequentially (accessible via CLI)
+- **`common.sh`**: Common bash utilities (library, used by bash scripts)
+- **`rename.sh`**: Rename files sequentially (accessible via CLI as `rename`)
 
 ## Usage Patterns
 
