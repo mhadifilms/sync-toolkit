@@ -256,22 +256,3 @@ Some bash scripts (`.sh` files) are kept for video processing operations that wo
 - `common.sh` - Common bash utilities (library, not a command)
 
 All commands are accessible via the unified CLI.
-
-## Security Notes
-
-- Credentials are stored locally with restricted permissions
-- API keys are never logged or displayed
-- Use `config --clear` to remove stored credentials
-- Never commit credentials to version control
-
-## Contributing
-
-PRs welcome! Please ensure:
-- No hardcoded credentials
-- Scripts work with interactive prompts
-- Error handling is comprehensive
-- Documentation is updated
-
-## License
-
-[Your License Here]
