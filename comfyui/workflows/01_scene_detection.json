@@ -1,0 +1,126 @@
+{
+  "last_node_id": 2,
+  "last_link_id": 0,
+  "nodes": [
+    {
+      "id": 1,
+      "type": "DetectScenes",
+      "pos": [
+        400,
+        300
+      ],
+      "size": {
+        "0": 315,
+        "1": 82
+      },
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "outputs": [
+        {
+          "name": "output_directory",
+          "type": "STRING",
+          "links": []
+        },
+        {
+          "name": "csv_path",
+          "type": "STRING",
+          "links": []
+        },
+        {
+          "name": "segment_count",
+          "type": "INT",
+          "links": []
+        }
+      ],
+      "properties": {},
+      "widgets_values": [
+        "/path/to/input/video.mov",
+        "/path/to/input/audio.wav",
+        ""
+      ],
+      "inputs": [
+        {
+          "name": "video_path",
+          "type": "STRING",
+          "widget": {
+            "name": "video_path"
+          },
+          "link": null,
+          "localized_name": "Video Path"
+        },
+        {
+          "name": "audio_path",
+          "type": "STRING",
+          "widget": {
+            "name": "audio_path"
+          },
+          "link": null,
+          "localized_name": "Audio Path"
+        },
+        {
+          "name": "output_dir",
+          "type": "STRING",
+          "widget": {
+            "name": "output_dir"
+          },
+          "link": null,
+          "localized_name": "Output Dir"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "type": "ExtractAudio",
+      "pos": [
+        700,
+        500
+      ],
+      "size": {
+        "0": 315,
+        "1": 82
+      },
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "outputs": [
+        {
+          "name": "output_directory",
+          "type": "STRING",
+          "links": []
+        }
+      ],
+      "properties": {},
+      "widgets_values": [
+        "/path/to/videos",
+        false
+      ],
+      "inputs": [
+        {
+          "name": "video_directory",
+          "type": "STRING",
+          "widget": {
+            "name": "video_directory"
+          },
+          "link": null,
+          "localized_name": "Video Directory"
+        },
+        {
+          "name": "force",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "force"
+          },
+          "link": null
+        }
+      ]
+    }
+  ],
+  "links": [],
+  "groups": [],
+  "config": {},
+  "extra": {},
+  "version": 0.4,
+  "id": "19d0dbe4-154b-435e-9635-7f9304f0a18b",
+  "revision": 0
+}

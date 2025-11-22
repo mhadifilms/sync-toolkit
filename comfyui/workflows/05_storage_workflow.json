@@ -1,0 +1,444 @@
+{
+  "last_node_id": 4,
+  "last_link_id": 0,
+  "nodes": [
+    {
+      "id": 1,
+      "type": "UploadToStorage",
+      "pos": [
+        400,
+        300
+      ],
+      "size": {
+        "0": 315,
+        "1": 82
+      },
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "outputs": [
+        {
+          "name": "uploaded_count",
+          "type": "INT",
+          "links": []
+        },
+        {
+          "name": "manifest_path",
+          "type": "STRING",
+          "links": []
+        },
+        {
+          "name": "output_directory",
+          "type": "STRING",
+          "links": []
+        }
+      ],
+      "properties": {},
+      "widgets_values": [
+        "/path/to/files",
+        "s3",
+        "",
+        "my-bucket",
+        "s3://my-bucket/uploads/",
+        8,
+        "*",
+        true
+      ],
+      "inputs": [
+        {
+          "name": "input_path",
+          "type": "STRING",
+          "widget": {
+            "name": "input_path"
+          },
+          "link": null,
+          "localized_name": "Input Path"
+        },
+        {
+          "name": "storage_type",
+          "type": [
+            "s3",
+            "supabase"
+          ],
+          "widget": {
+            "name": "storage_type"
+          },
+          "link": null,
+          "localized_name": "Storage Type"
+        },
+        {
+          "name": "credentials",
+          "type": "CREDENTIALS",
+          "widget": {
+            "name": "credentials"
+          },
+          "link": null
+        },
+        {
+          "name": "s3_bucket",
+          "type": "STRING",
+          "widget": {
+            "name": "s3_bucket"
+          },
+          "link": null,
+          "localized_name": "S3 Bucket"
+        },
+        {
+          "name": "s3_dest",
+          "type": "STRING",
+          "widget": {
+            "name": "s3_dest"
+          },
+          "link": null,
+          "localized_name": "S3 Dest"
+        },
+        {
+          "name": "supabase_bucket",
+          "type": "STRING",
+          "widget": {
+            "name": "supabase_bucket"
+          },
+          "link": null,
+          "localized_name": "Supabase Bucket"
+        },
+        {
+          "name": "parallel",
+          "type": "INT",
+          "widget": {
+            "name": "parallel"
+          },
+          "link": null
+        },
+        {
+          "name": "pattern",
+          "type": "STRING",
+          "widget": {
+            "name": "pattern"
+          },
+          "link": null
+        },
+        {
+          "name": "preserve_structure",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "preserve_structure"
+          },
+          "link": null,
+          "localized_name": "Preserve Structure"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "type": "UploadToStorage",
+      "pos": [
+        700,
+        500
+      ],
+      "size": {
+        "0": 315,
+        "1": 82
+      },
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "outputs": [
+        {
+          "name": "uploaded_count",
+          "type": "INT",
+          "links": []
+        },
+        {
+          "name": "manifest_path",
+          "type": "STRING",
+          "links": []
+        },
+        {
+          "name": "output_directory",
+          "type": "STRING",
+          "links": []
+        }
+      ],
+      "properties": {},
+      "widgets_values": [
+        "/path/to/files",
+        "supabase",
+        "",
+        "my-bucket",
+        4
+      ],
+      "inputs": [
+        {
+          "name": "input_path",
+          "type": "STRING",
+          "widget": {
+            "name": "input_path"
+          },
+          "link": null,
+          "localized_name": "Input Path"
+        },
+        {
+          "name": "storage_type",
+          "type": [
+            "s3",
+            "supabase"
+          ],
+          "widget": {
+            "name": "storage_type"
+          },
+          "link": null,
+          "localized_name": "Storage Type"
+        },
+        {
+          "name": "credentials",
+          "type": "CREDENTIALS",
+          "widget": {
+            "name": "credentials"
+          },
+          "link": null
+        },
+        {
+          "name": "s3_bucket",
+          "type": "STRING",
+          "widget": {
+            "name": "s3_bucket"
+          },
+          "link": null,
+          "localized_name": "S3 Bucket"
+        },
+        {
+          "name": "s3_dest",
+          "type": "STRING",
+          "widget": {
+            "name": "s3_dest"
+          },
+          "link": null,
+          "localized_name": "S3 Dest"
+        },
+        {
+          "name": "supabase_bucket",
+          "type": "STRING",
+          "widget": {
+            "name": "supabase_bucket"
+          },
+          "link": null,
+          "localized_name": "Supabase Bucket"
+        },
+        {
+          "name": "parallel",
+          "type": "INT",
+          "widget": {
+            "name": "parallel"
+          },
+          "link": null
+        },
+        {
+          "name": "pattern",
+          "type": "STRING",
+          "widget": {
+            "name": "pattern"
+          },
+          "link": null
+        },
+        {
+          "name": "preserve_structure",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "preserve_structure"
+          },
+          "link": null,
+          "localized_name": "Preserve Structure"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "type": "S3Monitor",
+      "pos": [
+        1000,
+        700
+      ],
+      "size": {
+        "0": 315,
+        "1": 82
+      },
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "outputs": [
+        {
+          "name": "current_count",
+          "type": "INT",
+          "links": []
+        },
+        {
+          "name": "status",
+          "type": "STRING",
+          "links": []
+        },
+        {
+          "name": "is_complete",
+          "type": "BOOLEAN",
+          "links": []
+        }
+      ],
+      "properties": {},
+      "widgets_values": [
+        "s3://my-bucket/uploads/",
+        100,
+        "",
+        180,
+        "(_bounced\\.mov|_bounced\\.wav)"
+      ],
+      "inputs": [
+        {
+          "name": "s3_path",
+          "type": "STRING",
+          "widget": {
+            "name": "s3_path"
+          },
+          "link": null,
+          "localized_name": "S3 Path"
+        },
+        {
+          "name": "expected_count",
+          "type": "INT",
+          "widget": {
+            "name": "expected_count"
+          },
+          "link": null,
+          "localized_name": "Expected Count"
+        },
+        {
+          "name": "credentials",
+          "type": "CREDENTIALS",
+          "widget": {
+            "name": "credentials"
+          },
+          "link": null
+        },
+        {
+          "name": "interval",
+          "type": "INT",
+          "widget": {
+            "name": "interval"
+          },
+          "link": null
+        },
+        {
+          "name": "pattern",
+          "type": "STRING",
+          "widget": {
+            "name": "pattern"
+          },
+          "link": null
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "type": "S3Download",
+      "pos": [
+        1300,
+        900
+      ],
+      "size": {
+        "0": 315,
+        "1": 82
+      },
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "outputs": [
+        {
+          "name": "downloaded_count",
+          "type": "INT",
+          "links": []
+        },
+        {
+          "name": "output_directory",
+          "type": "STRING",
+          "links": []
+        }
+      ],
+      "properties": {},
+      "widgets_values": [
+        "s3://my-bucket/downloads/",
+        "/path/to/downloads",
+        "sync",
+        "",
+        10
+      ],
+      "inputs": [
+        {
+          "name": "source",
+          "type": "STRING",
+          "widget": {
+            "name": "source"
+          },
+          "link": null
+        },
+        {
+          "name": "local_dest",
+          "type": "STRING",
+          "widget": {
+            "name": "local_dest"
+          },
+          "link": null,
+          "localized_name": "Local Dest"
+        },
+        {
+          "name": "mode",
+          "type": [
+            "sync",
+            "list",
+            "json"
+          ],
+          "widget": {
+            "name": "mode"
+          },
+          "link": null
+        },
+        {
+          "name": "credentials",
+          "type": "CREDENTIALS",
+          "widget": {
+            "name": "credentials"
+          },
+          "link": null
+        },
+        {
+          "name": "parallel",
+          "type": "INT",
+          "widget": {
+            "name": "parallel"
+          },
+          "link": null
+        },
+        {
+          "name": "suffix",
+          "type": "STRING",
+          "widget": {
+            "name": "suffix"
+          },
+          "link": null
+        },
+        {
+          "name": "name",
+          "type": "STRING",
+          "widget": {
+            "name": "name"
+          },
+          "link": null
+        }
+      ]
+    }
+  ],
+  "links": [],
+  "groups": [],
+  "config": {},
+  "extra": {},
+  "version": 0.4,
+  "id": "918852ce-9749-4b27-8a3a-8104e618073c",
+  "revision": 0
+}

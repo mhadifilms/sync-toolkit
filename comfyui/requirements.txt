@@ -1,0 +1,14 @@
+# ComfyUI Custom Nodes Requirements
+# These are in addition to the main sync-toolkit requirements
+
+# ComfyUI base (usually installed with ComfyUI)
+# No explicit dependency needed - nodes will work when installed in ComfyUI
+
+# Additional dependencies that may be needed:
+# - boto3 (for S3 operations) - should already be in sync-toolkit requirements
+# - requests (for API calls) - should already be in sync-toolkit requirements
+# - scenedetect (for scene detection) - optional, will work without it
+
+# Note: Install main sync-toolkit requirements first:
+# pip install -r scripts/requirements.txt
+
