@@ -34,6 +34,11 @@ try:
         LoadAudio,
         VideoSettings,
         Credentials,
+        MergeDirectories,
+        FilterFiles,
+        OrganizeOutputs,
+        SyncDevAPI,
+        SyncCustomEndpoint,
     )
 except ImportError:
     # Fallback to absolute imports
@@ -54,6 +59,11 @@ except ImportError:
     from nodes.LoadAudio import LoadAudio
     from nodes.VideoSettings import VideoSettings
     from nodes.Credentials import Credentials
+    from nodes.MergeDirectories import MergeDirectories
+    from nodes.FilterFiles import FilterFiles
+    from nodes.OrganizeOutputs import OrganizeOutputs
+    from nodes.SyncDevAPI import SyncDevAPI
+    from nodes.SyncCustomEndpoint import SyncCustomEndpoint
 
 # Export all node classes for ComfyUI
 NODE_CLASS_MAPPINGS = {
@@ -74,6 +84,11 @@ NODE_CLASS_MAPPINGS = {
     "LoadAudio": LoadAudio,
     "VideoSettings": VideoSettings,
     "Credentials": Credentials,
+    "MergeDirectories": MergeDirectories,
+    "FilterFiles": FilterFiles,
+    "OrganizeOutputs": OrganizeOutputs,
+    "SyncDevAPI": SyncDevAPI,
+    "SyncCustomEndpoint": SyncCustomEndpoint,
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
@@ -94,6 +109,11 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "LoadAudio": "Load Audio",
     "VideoSettings": "Video Settings",
     "Credentials": "Credentials",
+    "MergeDirectories": "Merge Directories",
+    "FilterFiles": "Filter Files",
+    "OrganizeOutputs": "Organize Outputs",
+    "SyncDevAPI": "Sync Dev API",
+    "SyncCustomEndpoint": "Sync Custom Endpoint",
 }
 
 __all__ = ["NODE_CLASS_MAPPINGS", "NODE_DISPLAY_NAME_MAPPINGS"]

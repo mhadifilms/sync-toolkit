@@ -19,6 +19,11 @@ from .LoadVideo import LoadVideo
 from .LoadAudio import LoadAudio
 from .VideoSettings import VideoSettings
 from .Credentials import Credentials
+from .MergeDirectories import MergeDirectories
+from .FilterFiles import FilterFiles
+from .OrganizeOutputs import OrganizeOutputs
+from .SyncDevAPI import SyncDevAPI
+from .SyncCustomEndpoint import SyncCustomEndpoint
 
 __all__ = [
     "DetectScenes",
@@ -38,5 +43,10 @@ __all__ = [
     "LoadAudio",
     "VideoSettings",
     "Credentials",
+    "MergeDirectories",
+    "FilterFiles",
+    "OrganizeOutputs",
+    "SyncDevAPI",
+    "SyncCustomEndpoint",
 ]
 

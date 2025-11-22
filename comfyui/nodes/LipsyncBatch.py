@@ -1,6 +1,7 @@
 """
-ComfyUI node for batch lipsync processing.
-Wraps scripts/api/lipsync_batch.py
+ComfyUI node for preparing batch lipsync requests.
+Creates request payloads but does not execute API calls.
+Actual API execution is handled by SyncDevAPI or SyncCustomEndpoint nodes.
 """
 import sys
 import json
@@ -21,12 +22,6 @@ SCRIPT_DIR = PROJECT_ROOT / "scripts"
 if str(SCRIPT_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPT_DIR))
 
-# Import utils - use absolute import from current directory
-# Add current directory (comfyui) to path FIRST for utils import
-COMFYUI_DIR = Path(__file__).parent.parent.resolve()
-if str(COMFYUI_DIR) not in sys.path:
-    sys.path.insert(0, str(COMFYUI_DIR))
-
 # Import utils from comfyui directory using importlib to avoid conflict with scripts/utils
 import importlib.util
 utils_path = COMFYUI_DIR / "utils.py"
@@ -37,11 +32,10 @@ utils_spec.loader.exec_module(_comfyui_utils)
 normalize_path = _comfyui_utils.normalize_path
 ensure_absolute_path = _comfyui_utils.ensure_absolute_path
 format_error = _comfyui_utils.format_error
-get_sync_api_key = _comfyui_utils.get_sync_api_key
 
 
 class LipsyncBatch:
-    """Run batch lipsync processing from manifest file"""
+    """Prepare batch lipsync requests from manifest file"""
     
     @classmethod
     def INPUT_TYPES(cls):
@@ -50,50 +44,34 @@ class LipsyncBatch:
                 "manifest_path": ("STRING", {"default": ""}),
             },
             "optional": {
-                "credentials": ("CREDENTIALS", {"default": None}),
                 "start_index": ("INT", {"default": 1, "min": 1}),
-                "end_index": ("INT", {"default": 0, "min": 0}),  # 0 means use default
-                "max_workers": ("INT", {"default": 15, "min": 1, "max": 15}),
-                "check_exists": ("BOOLEAN", {"default": True}),
-                "keep_asd": ("BOOLEAN", {"default": False}),
-            }
+                "end_index": ("INT", {"default": 0, "min": 0}),  # 0 means process all
+                "enable_asd": ("BOOLEAN", {"default": True}),
+                "check_exists": ("BOOLEAN", {"default": False}),  # Check if URLs exist before creating requests
         }
     
-    RETURN_TYPES = ("INT", "STRING", "STRING", "STRING")
-    RETURN_NAMES = ("completed_count", "output_directory", "results_json", "manifest_path")
+    RETURN_TYPES = ("STRING", "STRING", "INT")
+    RETURN_NAMES = ("requests_json", "manifest_path", "request_count")
     FUNCTION = "run"
     CATEGORY = "sync-toolkit/api"
     
-    def run(self, manifest_path: str, credentials: dict = None,
-            start_index: int = 1, end_index: int = 0,
-            max_workers: int = 15, check_exists: bool = True,
-            keep_asd: bool = False):
-        """Run batch processing"""
+    def run(self, manifest_path: str, start_index: int = 1, end_index: int = 0,
+            enable_asd: bool = True, check_exists: bool = False):
+        """Prepare batch requests from manifest"""
         try:
-            # Extract credentials
-            creds = credentials or {}
-            api_key = creds.get("sync_api_key", "") or get_sync_api_key("")
-            if not api_key:
-                return (0, "", "", "ERROR: Sync API key required")
-            
             # Normalize manifest path
             manifest_file = normalize_path(manifest_path)
             if not manifest_file.exists():
-                return (0, "", "", "ERROR: Manifest file not found")
-            
-            # Import batch processing functions
-            from api.lipsync_batch import (
-                parse_manifest, process_index, OUTDIR
-            )
-            from concurrent.futures import ThreadPoolExecutor, as_completed
-            import logging
+                return ("", "", 0)
             
             # Parse manifest
+            from utils.common import parse_manifest
             video_urls, audio_urls = parse_manifest(manifest_file)
-            if not video_urls or not audio_urls:
-                return (0, "", "", "ERROR: No video/audio URLs found in manifest")
             
-            # Set end index
+            if not video_urls or not audio_urls:
+                return ("", "", 0)
+            
+            # Set end index (0 means process all)
             if end_index == 0:
                 end_index = min(len(video_urls), len(audio_urls))
             
@@ -102,54 +80,56 @@ class LipsyncBatch:
             end_idx = min(end_index, max_pairs)
             
             if start_index < 1 or end_idx < start_index:
-                return (0, "", "", "ERROR: Invalid start/end range")
+                return ("", "", 0)
             
-            # Clamp workers
-            workers = max(1, min(max_workers, 15))
-            
-            # Create output directory
-            OUTDIR.mkdir(exist_ok=True)
-            
-            # Process indices
+            # Create request payloads
             all_indices = list(range(start_index, end_idx + 1))
-            completed = []
-            results = []
+            requests = []
             
-            with ThreadPoolExecutor(max_workers=workers) as ex:
-                futures = {
-                    ex.submit(
-                        process_index,
-                        idx=i,
-                        api_key=api_key,
-                        video_urls=video_urls,
-                        audio_urls=audio_urls,
-                        check_exists=check_exists,
-                        force_asd=keep_asd,
-                    ): i for i in all_indices
+            for idx in all_indices:
+                vid_url = video_urls[idx - 1]
+                aud_url = audio_urls[idx - 1]
+                
+                # Optionally check if URLs exist
+                if check_exists:
+                    try:
+                        import requests as req_lib
+                        vid_resp = req_lib.head(vid_url, timeout=10, allow_redirects=True)
+                        aud_resp = req_lib.head(aud_url, timeout=10, allow_redirects=True)
+                        if vid_resp.status_code != 200 or aud_resp.status_code != 200:
+                            continue  # Skip invalid URLs
+                    except Exception:
+                        continue  # Skip if check fails
+                
+                # Build request payload
+                payload = {
+                    "model": "lipsync-2-pro",
+                    "input": [
+                        {"type": "video", "url": vid_url},
+                        {"type": "audio", "url": aud_url}
+                    ]
                 }
                 
-                for fut in as_completed(futures):
-                    idx = futures[fut]
-                    try:
-                        i, status = fut.result()
-                        results.append({"index": i, "status": status})
-                        if status == "completed":
-                            completed.append(i)
-                    except Exception as e:
-                        results.append({"index": idx, "status": f"failed:{e}"})
+                if enable_asd:
+                    payload["options"] = {
+                        "active_speaker_detection": {"auto_detect": True}
+                    }
+                
+                requests.append({
+                    "index": idx,
+                    "video_url": vid_url,
+                    "audio_url": aud_url,
+                    "payload": payload
+                })
             
-            # Save results JSON
-            results_file = OUTDIR / "batch_results.json"
-            with open(results_file, 'w') as f:
-                json.dump(results, f, indent=2)
+            # Return requests as JSON string
+            requests_json = json.dumps(requests, indent=2)
             
             return (
-                len(completed),
-                ensure_absolute_path(OUTDIR),
-                json.dumps(results),
-                ensure_absolute_path(manifest_file)
+                requests_json,
+                ensure_absolute_path(manifest_file),
+                len(requests)
             )
             
         except Exception as e:
-            return (0, "", "", format_error(e))
-
+            return ("", "", 0)

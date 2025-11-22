@@ -40,40 +40,45 @@ format_error = _comfyui_utils.format_error
 
 
 class ExtractAudio:
-    """Extract audio from videos in a directory"""
     
     @classmethod
     def INPUT_TYPES(cls):
         return {
-            "required": {
-                "video_directory": ("STRING", {"default": ""}),
-            },
+            "required": {},
             "optional": {
+                "directory_data": ("DIRECTORY_DATA", {"default": None}),
+                "video_data": ("VIDEO_DATA", {"default": None}),
+                "video_directory": ("STRING", {"default": ""}),  # Legacy support
                 "force": ("BOOLEAN", {"default": False}),
             }
         }
     
-    RETURN_TYPES = ("STRING",)
+    RETURN_TYPES = ("DIRECTORY_DATA",)
     RETURN_NAMES = ("output_directory",)
     FUNCTION = "run"
     CATEGORY = "sync-toolkit/video"
     
-    def run(self, video_directory: str, force: bool = False):
+    def run(self, directory_data: dict = None, video_data: dict = None,
+            video_directory: str = "", force: bool = False):
         """Run audio extraction"""
         try:
-            video_dir = normalize_path(video_directory)
+            if directory_data and not directory_data.get("error"):
+            elif video_data and not video_data.get("error"):
+                first_video = normalize_path(video_data.get("primary_file", ""))
+                video_dir = first_video.parent
+            elif video_directory:
+
+            else:
+            
             if not video_dir.exists() or not video_dir.is_dir():
-                return ("ERROR: Video directory not found",)
             
             # Get extract_audio.sh script
             script_path = SCRIPT_DIR / "video" / "extract_audio.sh"
             if not script_path.exists():
-                return ("ERROR: extract_audio.sh script not found",)
             
             # Build command
             cmd = ["bash", str(script_path)]
             if force:
-                cmd.append("--force")
             cmd.append(str(video_dir))
             
             # Run script
@@ -85,10 +90,18 @@ class ExtractAudio:
             )
             
             if result.returncode != 0:
-                return (f"ERROR: {result.stderr}",)
             
-            return (ensure_absolute_path(video_dir),)
+            # Get extracted audio files
+            audio_files = list(video_dir.glob("*.wav")) + list(video_dir.glob("*.aac"))
+            
+            # Return DIRECTORY_DATA structure
+            directory_data = {
+                "path": ensure_absolute_path(video_dir),
+                "file_count": len(audio_files),
+                "files": [ensure_absolute_path(f) for f in audio_files],
+            }
+            
+            return (directory_data,)
             
         except Exception as e:
-            return (format_error(e),)
 

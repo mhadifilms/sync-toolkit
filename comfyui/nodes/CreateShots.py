@@ -39,7 +39,7 @@ format_error = _comfyui_utils.format_error
 
 
 class CreateShots:
-    """Create individual video shots from CSV spotting data"""
+    """Create video shots from CSV spotting data"""
     
     @classmethod
     def INPUT_TYPES(cls):
@@ -60,13 +60,14 @@ class CreateShots:
     CATEGORY = "sync-toolkit/video"
     
     def run(self, csv_path: str, video_data: dict = None, video_path: str = "", output_dir: str = ""):
-        """Run shot creation"""
+        """Run shot creation from CSV"""
         try:
-            from video.create_shots import cut_videos_directly
             import csv
             from utils.timecode import tc24_to_frames
+            from video.create_shots import cut_videos_directly
             
             # Extract video path from VIDEO_DATA or use legacy string input
+            video_in = None
             if video_data and not video_data.get("error"):
                 video_in = normalize_path(video_data.get("primary_file", ""))
             elif video_path:
@@ -77,15 +78,15 @@ class CreateShots:
             csv_in = normalize_path(csv_path)
             
             if not video_in.exists():
-                return ("ERROR: Video file not found", 0)
+                return ({"error": "ERROR: Video file not found"}, 0)
             if not csv_in.exists():
-                return ("ERROR: CSV file not found", 0)
+                return ({"error": "ERROR: CSV file not found"}, 0)
             
             # Set output directory
             if output_dir:
                 out_dir = normalize_path(output_dir)
             else:
-                out_dir = video_in.parent / "vub_clips_23976"
+                out_dir = video_in.parent / "Shots"
             out_dir.mkdir(parents=True, exist_ok=True)
             
             # Read CSV
@@ -102,7 +103,7 @@ class CreateShots:
                     rows.append(row)
             
             if not rows:
-                return ("ERROR: No usable rows found with Event Start Time / Event End Time", 0)
+                return ({"error": "ERROR: No valid rows found in CSV"}, 0)
             
             # Sort by start time
             def sort_key(row):
@@ -114,7 +115,6 @@ class CreateShots:
             
             # Create mock args object
             class MockArgs:
-                show_id = "SHOW001"
                 limit = None
             
             args = MockArgs()

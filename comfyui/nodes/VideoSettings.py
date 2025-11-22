@@ -9,17 +9,14 @@ from typing import Dict, Any
 # Add current directory (comfyui) to path for utils import
 COMFYUI_DIR = Path(__file__).parent.parent
 if str(COMFYUI_DIR) not in sys.path:
-    sys.path.insert(0, str(COMFYUI_DIR))
 
 # Add project root to path
 PROJECT_ROOT = COMFYUI_DIR.parent
 if str(PROJECT_ROOT) not in sys.path:
-    sys.path.insert(0, str(PROJECT_ROOT))
 
 # Add scripts directory to path
 SCRIPT_DIR = PROJECT_ROOT / "scripts"
 if str(SCRIPT_DIR) not in sys.path:
-    sys.path.insert(0, str(SCRIPT_DIR))
 
 # Import utils from comfyui directory using importlib to avoid conflict with scripts/utils
 import importlib.util
@@ -32,11 +29,9 @@ format_error = _comfyui_utils.format_error
 
 
 class VideoSettings:
-    """Configure video and audio encoding settings"""
     
     @classmethod
     def INPUT_TYPES(cls):
-        return {
             "required": {},
             "optional": {
                 "video_codec": (["prores", "h264", "h265", "dnxhd", "copy"], {"default": "prores"}),
@@ -48,7 +43,6 @@ class VideoSettings:
                 "audio_bit_depth": (["16", "24", "32"], {"default": "24"}),
                 "audio_sample_rate": (["44100", "48000", "96000"], {"default": "48000"}),
                 "audio_channels": (["1", "2", "5.1", "7.1"], {"default": "2"}),
-            }
         }
     
     RETURN_TYPES = ("VIDEO_SETTINGS",)
@@ -62,7 +56,6 @@ class VideoSettings:
             audio_sample_rate: str = "48000", audio_channels: str = "2"):
         """Create settings object"""
         try:
-            settings = {
                 "video": {
                     "codec": video_codec,
                     "profile": video_profile,
@@ -75,11 +68,9 @@ class VideoSettings:
                     "bit_depth": int(audio_bit_depth),
                     "sample_rate": int(audio_sample_rate),
                     "channels": audio_channels,
-                }
             }
             
             return (settings,)
             
         except Exception as e:
-            return ({"error": format_error(e)},)
 

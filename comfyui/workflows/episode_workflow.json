@@ -1,0 +1,833 @@
+{
+  "last_node_id": 14,
+  "last_link_id": 19,
+  "nodes": [
+    {
+      "id": 1,
+      "type": "Credentials",
+      "pos": [
+        50,
+        50
+      ],
+      "size": {
+        "0": 315,
+        "1": 300
+      },
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "outputs": [
+        {
+          "name": "credentials",
+          "type": "CREDENTIALS",
+          "links": [
+            12,
+            18
+          ],
+          "slot_index": 0
+        }
+      ],
+      "properties": {},
+      "widgets_values": [
+        "s3",
+        "your-sync-api-key-here",
+        false,
+        "",
+        "",
+        "us-east-1",
+        "",
+        "",
+        ""
+      ],
+      "inputs": [],
+      "title": "Credentials",
+      "notes": "Choose storage type (S3/Supabase). For S3, enable SSO to use configured AWS credentials."
+    },
+    {
+      "id": 2,
+      "type": "LoadVideo",
+      "pos": [
+        50,
+        400
+      ],
+      "size": {
+        "0": 315,
+        "1": 150
+      },
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "outputs": [
+        {
+          "name": "video_data",
+          "type": "VIDEO_DATA",
+          "links": [
+            1
+          ],
+          "slot_index": 0
+        }
+      ],
+      "properties": {},
+      "widgets_values": [
+        "single_file",
+        "/path/to/video.mov",
+        "",
+        "",
+        "*.mov,*.mp4,*.avi,*.mkv"
+      ],
+      "inputs": [],
+      "title": "Load Video",
+      "notes": "Load the full video file"
+    },
+    {
+      "id": 3,
+      "type": "LoadAudio",
+      "pos": [
+        50,
+        600
+      ],
+      "size": {
+        "0": 315,
+        "1": 150
+      },
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "outputs": [
+        {
+          "name": "audio_data",
+          "type": "AUDIO_DATA",
+          "links": [
+            2
+          ],
+          "slot_index": 0
+        }
+      ],
+      "properties": {},
+      "widgets_values": [
+        "single_file",
+        "/path/to/audio.wav",
+        "",
+        "",
+        "*.wav,*.aac,*.mp3,*.m4a"
+      ],
+      "inputs": [],
+      "title": "Load Audio",
+      "notes": "Load the full audio file (optional)"
+    },
+    {
+      "id": 4,
+      "type": "VideoSettings",
+      "pos": [
+        450,
+        400
+      ],
+      "size": {
+        "0": 315,
+        "1": 300
+      },
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "outputs": [
+        {
+          "name": "video_settings",
+          "type": "VIDEO_SETTINGS",
+          "links": [],
+          "slot_index": 0
+        }
+      ],
+      "properties": {},
+      "widgets_values": [
+        "prores",
+        "422",
+        23.976,
+        1920,
+        1080,
+        "pcm",
+        "24",
+        "48000",
+        "2"
+      ],
+      "inputs": [],
+      "title": "Video Settings",
+      "notes": "Configure video encoding settings (codec, fps, resolution, audio)"
+    },
+    {
+      "id": 5,
+      "type": "DetectScenes",
+      "pos": [
+        850,
+        400
+      ],
+      "size": {
+        "0": 315,
+        "1": 200
+      },
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "outputs": [
+        {
+          "name": "output_directory",
+          "type": "DIRECTORY_DATA",
+          "links": [
+            3,
+            4,
+            7
+          ],
+          "slot_index": 0
+        },
+        {
+          "name": "csv_path",
+          "type": "STRING",
+          "links": [],
+          "slot_index": 1
+        },
+        {
+          "name": "segment_count",
+          "type": "INT",
+          "links": [],
+          "slot_index": 2
+        }
+      ],
+      "properties": {},
+      "widgets_values": [
+        "",
+        "",
+        ""
+      ],
+      "inputs": [
+        {
+          "name": "video_data",
+          "type": "VIDEO_DATA",
+          "widget": null,
+          "link": 1
+        },
+        {
+          "name": "audio_data",
+          "type": "AUDIO_DATA",
+          "widget": null,
+          "link": 2
+        }
+      ],
+      "title": "Detect Scenes",
+      "notes": "Automatically detects scene boundaries and splits episode into segments"
+    },
+    {
+      "id": 6,
+      "type": "GroupByFace",
+      "pos": [
+        1250,
+        300
+      ],
+      "size": {
+        "0": 315,
+        "1": 250
+      },
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "outputs": [
+        {
+          "name": "output_directory",
+          "type": "DIRECTORY_DATA",
+          "links": [
+            8
+          ],
+          "slot_index": 0
+        },
+        {
+          "name": "group_count",
+          "type": "INT",
+          "links": [],
+          "slot_index": 1
+        },
+        {
+          "name": "groups_json",
+          "type": "STRING",
+          "links": [
+            10,
+            19
+          ],
+          "slot_index": 2
+        }
+      ],
+      "properties": {},
+      "widgets_values": [
+        "",
+        "",
+        0.35,
+        2,
+        true,
+        "",
+        false,
+        false,
+        10
+      ],
+      "inputs": [
+        {
+          "name": "directory_data",
+          "type": "DIRECTORY_DATA",
+          "widget": null,
+          "link": 3
+        }
+      ],
+      "title": "Group By Face",
+      "notes": "OPTIONAL: Groups scenes by detected faces. Disconnect to skip."
+    },
+    {
+      "id": 7,
+      "type": "RenameFiles",
+      "pos": [
+        1250,
+        600
+      ],
+      "size": {
+        "0": 315,
+        "1": 100
+      },
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "outputs": [
+        {
+          "name": "output_directory",
+          "type": "DIRECTORY_DATA",
+          "links": [
+            9
+          ],
+          "slot_index": 0
+        },
+        {
+          "name": "renamed_count",
+          "type": "INT",
+          "links": [],
+          "slot_index": 1
+        }
+      ],
+      "properties": {},
+      "widgets_values": [],
+      "inputs": [
+        {
+          "name": "directory_data",
+          "type": "DIRECTORY_DATA",
+          "widget": null,
+          "link": 4
+        }
+      ],
+      "title": "Rename Files",
+      "notes": "OPTIONAL: Rename files sequentially. Disconnect to skip."
+    },
+    {
+      "id": 8,
+      "type": "ExtractAudio",
+      "pos": [
+        1650,
+        300
+      ],
+      "size": {
+        "0": 315,
+        "1": 150
+      },
+      "flags": {},
+      "order": 7,
+      "mode": 0,
+      "outputs": [
+        {
+          "name": "output_directory",
+          "type": "DIRECTORY_DATA",
+          "links": [],
+          "slot_index": 0
+        }
+      ],
+      "properties": {},
+      "widgets_values": [
+        false
+      ],
+      "inputs": [
+        {
+          "name": "directory_data",
+          "type": "DIRECTORY_DATA",
+          "widget": null,
+          "link": 8
+        }
+      ],
+      "title": "Extract Audio",
+      "notes": "OPTIONAL: Extract audio from videos. Disconnect to skip."
+    },
+    {
+      "id": 9,
+      "type": "BounceVideo",
+      "pos": [
+        1650,
+        500
+      ],
+      "size": {
+        "0": 315,
+        "1": 150
+      },
+      "flags": {},
+      "order": 8,
+      "mode": 0,
+      "outputs": [
+        {
+          "name": "output_directory",
+          "type": "DIRECTORY_DATA",
+          "links": [],
+          "slot_index": 0
+        }
+      ],
+      "properties": {},
+      "widgets_values": [
+        "",
+        false
+      ],
+      "inputs": [
+        {
+          "name": "directory_data",
+          "type": "DIRECTORY_DATA",
+          "widget": null,
+          "link": 9
+        }
+      ],
+      "title": "Bounce Video",
+      "notes": "OPTIONAL: Create bounced versions. Disconnect to skip."
+    },
+    {
+      "id": 10,
+      "type": "FilterFiles",
+      "pos": [
+        2050,
+        400
+      ],
+      "size": {
+        "0": 315,
+        "1": 100
+      },
+      "flags": {},
+      "order": 9,
+      "mode": 0,
+      "outputs": [
+        {
+          "name": "output_directory",
+          "type": "DIRECTORY_DATA",
+          "links": [
+            14
+          ],
+          "slot_index": 0
+        }
+      ],
+      "properties": {},
+      "widgets_values": [
+        "*",
+        false
+      ],
+      "inputs": [
+        {
+          "name": "directory_data",
+          "type": "DIRECTORY_DATA",
+          "widget": null,
+          "link": 7
+        }
+      ],
+      "title": "Filter Files",
+      "notes": "OPTIONAL: Filter files by pattern. Disconnect to skip."
+    },
+    {
+      "id": 11,
+      "type": "OrganizeOutputs",
+      "pos": [
+        2450,
+        400
+      ],
+      "size": {
+        "0": 315,
+        "1": 200
+      },
+      "flags": {},
+      "order": 10,
+      "mode": 0,
+      "outputs": [
+        {
+          "name": "output_directory",
+          "type": "DIRECTORY_DATA",
+          "links": [
+            15
+          ],
+          "slot_index": 0
+        },
+        {
+          "name": "organized_count",
+          "type": "INT",
+          "links": [],
+          "slot_index": 1
+        },
+        {
+          "name": "organization_json",
+          "type": "STRING",
+          "links": [],
+          "slot_index": 2
+        }
+      ],
+      "properties": {},
+      "widgets_values": [
+        "/path/to/output/organized",
+        "by_scene",
+        "",
+        "",
+        "",
+        "{scene}/{file}",
+        "copy"
+      ],
+      "inputs": [
+        {
+          "name": "directory_data",
+          "type": "DIRECTORY_DATA",
+          "widget": null,
+          "link": 14
+        },
+        {
+          "name": "groups_json",
+          "type": "STRING",
+          "widget": null,
+          "link": 10
+        }
+      ],
+      "title": "Organize Outputs",
+      "notes": "Organize files into custom folder structures (by scene, character, metadata, or custom pattern)"
+    },
+    {
+      "id": 12,
+      "type": "UploadToStorage",
+      "pos": [
+        2850,
+        400
+      ],
+      "size": {
+        "0": 315,
+        "1": 300
+      },
+      "flags": {},
+      "order": 11,
+      "mode": 0,
+      "outputs": [
+        {
+          "name": "uploaded_count",
+          "type": "INT",
+          "links": [],
+          "slot_index": 0
+        },
+        {
+          "name": "manifest_path",
+          "type": "STRING",
+          "links": [
+            16
+          ],
+          "slot_index": 1
+        },
+        {
+          "name": "output_directory",
+          "type": "STRING",
+          "links": [],
+          "slot_index": 2
+        }
+      ],
+      "properties": {},
+      "widgets_values": [
+        "s3",
+        "",
+        "your-s3-bucket-name",
+        "s3://your-s3-bucket-name/episodes/scenes/",
+        "",
+        8,
+        "*",
+        false
+      ],
+      "inputs": [
+        {
+          "name": "directory_data",
+          "type": "DIRECTORY_DATA",
+          "widget": null,
+          "link": 15
+        },
+        {
+          "name": "credentials",
+          "type": "CREDENTIALS",
+          "widget": null,
+          "link": 12
+        }
+      ],
+      "title": "Upload To Storage",
+      "notes": "Upload files to S3 or Supabase. Storage type matches Credentials node."
+    },
+    {
+      "id": 13,
+      "type": "SyncCustomEndpoint",
+      "pos": [
+        3250,
+        400
+      ],
+      "size": {
+        "0": 315,
+        "1": 400
+      },
+      "flags": {},
+      "order": 12,
+      "mode": 0,
+      "outputs": [
+        {
+          "name": "completed_count",
+          "type": "INT",
+          "links": [],
+          "slot_index": 0
+        },
+        {
+          "name": "output_directory",
+          "type": "DIRECTORY_DATA",
+          "links": [
+            17
+          ],
+          "slot_index": 1
+        },
+        {
+          "name": "results_json",
+          "type": "STRING",
+          "links": [],
+          "slot_index": 2
+        },
+        {
+          "name": "output_urls_json",
+          "type": "STRING",
+          "links": [],
+          "slot_index": 3
+        }
+      ],
+      "properties": {},
+      "widgets_values": [
+        "",
+        "s3://your-bucket/lipsynced_scenes/",
+        "https://api.sync.so/v2/generate",
+        "/path/to/output/lipsynced",
+        1,
+        0,
+        15,
+        true,
+        180,
+        true,
+        true
+      ],
+      "inputs": [
+        {
+          "name": "manifest_path",
+          "type": "STRING",
+          "widget": null,
+          "link": 16
+        },
+        {
+          "name": "custom_output_folder",
+          "type": "STRING",
+          "widget": null,
+          "link": null
+        },
+        {
+          "name": "credentials",
+          "type": "CREDENTIALS",
+          "widget": null,
+          "link": 18
+        }
+      ],
+      "title": "Sync Custom Endpoint",
+      "notes": "Process all scenes through Sync.so Custom Endpoint. Set custom_output_folder to S3 path where outputs should be saved."
+    },
+    {
+      "id": 14,
+      "type": "OrganizeOutputs",
+      "pos": [
+        3650,
+        400
+      ],
+      "size": {
+        "0": 315,
+        "1": 200
+      },
+      "flags": {},
+      "order": 13,
+      "mode": 0,
+      "outputs": [
+        {
+          "name": "output_directory",
+          "type": "DIRECTORY_DATA",
+          "links": [],
+          "slot_index": 0
+        },
+        {
+          "name": "organized_count",
+          "type": "INT",
+          "links": [],
+          "slot_index": 1
+        },
+        {
+          "name": "organization_json",
+          "type": "STRING",
+          "links": [],
+          "slot_index": 2
+        }
+      ],
+      "properties": {},
+      "widgets_values": [
+        "/path/to/final/organized",
+        "by_scene",
+        "",
+        "",
+        "",
+        "{scene}/{file}",
+        "copy"
+      ],
+      "inputs": [
+        {
+          "name": "directory_data",
+          "type": "DIRECTORY_DATA",
+          "widget": null,
+          "link": 17
+        },
+        {
+          "name": "groups_json",
+          "type": "STRING",
+          "widget": null,
+          "link": 19
+        }
+      ],
+      "title": "Organize Final Outputs",
+      "notes": "Organize final lipsynced outputs into folders"
+    }
+  ],
+  "links": [
+    [
+      1,
+      2,
+      0,
+      5,
+      0,
+      "VIDEO_DATA"
+    ],
+    [
+      2,
+      3,
+      0,
+      5,
+      1,
+      "AUDIO_DATA"
+    ],
+    [
+      3,
+      5,
+      0,
+      6,
+      0,
+      "DIRECTORY_DATA"
+    ],
+    [
+      4,
+      5,
+      0,
+      7,
+      0,
+      "DIRECTORY_DATA"
+    ],
+    [
+      7,
+      5,
+      0,
+      10,
+      0,
+      "DIRECTORY_DATA"
+    ],
+    [
+      8,
+      6,
+      0,
+      8,
+      0,
+      "DIRECTORY_DATA"
+    ],
+    [
+      9,
+      7,
+      0,
+      9,
+      0,
+      "DIRECTORY_DATA"
+    ],
+    [
+      10,
+      6,
+      2,
+      11,
+      1,
+      "STRING"
+    ],
+    [
+      12,
+      1,
+      0,
+      12,
+      1,
+      "CREDENTIALS"
+    ],
+    [
+      14,
+      10,
+      0,
+      11,
+      0,
+      "DIRECTORY_DATA"
+    ],
+    [
+      15,
+      11,
+      0,
+      12,
+      0,
+      "DIRECTORY_DATA"
+    ],
+    [
+      16,
+      12,
+      1,
+      13,
+      0,
+      "STRING"
+    ],
+    [
+      17,
+      13,
+      1,
+      14,
+      0,
+      "DIRECTORY_DATA"
+    ],
+    [
+      18,
+      1,
+      0,
+      13,
+      2,
+      "CREDENTIALS"
+    ],
+    [
+      19,
+      6,
+      2,
+      14,
+      1,
+      "STRING"
+    ]
+  ],
+  "groups": [],
+  "config": {},
+  "extra": {},
+  "version": 0.4,
+  "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "revision": 0
+}

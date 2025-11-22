@@ -39,7 +39,7 @@ def find_comfyui_directory() -> Optional[Path]:
 def install_nodes(comfyui_dir: Path, project_comfyui: Path, use_symlink: bool = True):
     """Install nodes by creating symlink or copying files"""
     custom_nodes_dir = comfyui_dir / "custom_nodes"
-    target_dir = custom_nodes_dir / "sync-toolkit"
+    target_dir = custom_nodes_dir / "sync_toolkit"  # Use underscore for Python import compatibility
     
     # Remove existing installation
     if target_dir.exists():

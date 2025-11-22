@@ -1,0 +1,411 @@
+{
+  "last_node_id": 8,
+  "last_link_id": 8,
+  "nodes": [
+    {
+      "id": 1,
+      "type": "Credentials",
+      "pos": [
+        50,
+        50
+      ],
+      "size": {
+        "0": 315,
+        "1": 250
+      },
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "outputs": [
+        {
+          "name": "credentials",
+          "type": "CREDENTIALS",
+          "links": [
+            6,
+            8
+          ],
+          "slot_index": 0
+        }
+      ],
+      "properties": {},
+      "widgets_values": [
+        "s3",
+        "your-sync-api-key-here",
+        false,
+        "",
+        "",
+        "us-east-1",
+        "",
+        "",
+        ""
+      ],
+      "inputs": [],
+      "title": "Credentials"
+    },
+    {
+      "id": 2,
+      "type": "LoadVideo",
+      "pos": [
+        50,
+        350
+      ],
+      "size": {
+        "0": 315,
+        "1": 150
+      },
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "outputs": [
+        {
+          "name": "video_data",
+          "type": "VIDEO_DATA",
+          "links": [
+            1
+          ],
+          "slot_index": 0
+        }
+      ],
+      "properties": {},
+      "widgets_values": [
+        "single_file",
+        "/path/to/master_video.mov",
+        "",
+        "",
+        "*.mov,*.mp4,*.avi,*.mkv"
+      ],
+      "inputs": [],
+      "title": "Load Video"
+    },
+    {
+      "id": 3,
+      "type": "CreateShots",
+      "pos": [
+        450,
+        350
+      ],
+      "size": {
+        "0": 315,
+        "1": 150
+      },
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "outputs": [
+        {
+          "name": "output_directory",
+          "type": "DIRECTORY_DATA",
+          "links": [
+            2
+          ],
+          "slot_index": 0
+        },
+        {
+          "name": "clips_count",
+          "type": "INT",
+          "links": [],
+          "slot_index": 1
+        }
+      ],
+      "properties": {},
+      "widgets_values": [
+        "/path/to/spotting_template.csv",
+        ""
+      ],
+      "inputs": [
+        {
+          "name": "video_data",
+          "type": "VIDEO_DATA",
+          "widget": null,
+          "link": 1
+        }
+      ],
+      "title": "Create Shots from CSV"
+    },
+    {
+      "id": 4,
+      "type": "RenameFiles",
+      "pos": [
+        850,
+        350
+      ],
+      "size": {
+        "0": 315,
+        "1": 100
+      },
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "outputs": [
+        {
+          "name": "output_directory",
+          "type": "DIRECTORY_DATA",
+          "links": [
+            3
+          ],
+          "slot_index": 0
+        },
+        {
+          "name": "renamed_count",
+          "type": "INT",
+          "links": [],
+          "slot_index": 1
+        }
+      ],
+      "properties": {},
+      "widgets_values": [],
+      "inputs": [
+        {
+          "name": "directory_data",
+          "type": "DIRECTORY_DATA",
+          "widget": null,
+          "link": 2
+        }
+      ],
+      "title": "Rename Files"
+    },
+    {
+      "id": 5,
+      "type": "ExtractAudio",
+      "pos": [
+        1250,
+        350
+      ],
+      "size": {
+        "0": 315,
+        "1": 150
+      },
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "outputs": [
+        {
+          "name": "output_directory",
+          "type": "DIRECTORY_DATA",
+          "links": [
+            4
+          ],
+          "slot_index": 0
+        }
+      ],
+      "properties": {},
+      "widgets_values": [
+        false
+      ],
+      "inputs": [
+        {
+          "name": "directory_data",
+          "type": "DIRECTORY_DATA",
+          "widget": null,
+          "link": 3
+        }
+      ],
+      "title": "Extract Audio",
+      "notes": "Extracts audio from video shots"
+    },
+    {
+      "id": 6,
+      "type": "UploadToStorage",
+      "pos": [
+        1650,
+        350
+      ],
+      "size": {
+        "0": 315,
+        "1": 300
+      },
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "outputs": [
+        {
+          "name": "uploaded_count",
+          "type": "INT",
+          "links": [],
+          "slot_index": 0
+        },
+        {
+          "name": "manifest_path",
+          "type": "STRING",
+          "links": [
+            7
+          ],
+          "slot_index": 1
+        },
+        {
+          "name": "output_directory",
+          "type": "STRING",
+          "links": [],
+          "slot_index": 2
+        }
+      ],
+      "properties": {},
+      "widgets_values": [
+        "s3",
+        "",
+        "my-bucket",
+        "s3://my-bucket/shots/",
+        "",
+        8,
+        "*",
+        false
+      ],
+      "inputs": [
+        {
+          "name": "directory_data",
+          "type": "DIRECTORY_DATA",
+          "widget": null,
+          "link": 4
+        },
+        {
+          "name": "credentials",
+          "type": "CREDENTIALS",
+          "widget": null,
+          "link": 6
+        }
+      ],
+      "title": "Upload Shots to S3"
+    },
+    {
+      "id": 8,
+      "type": "SyncCustomEndpoint",
+      "pos": [
+        2050,
+        450
+      ],
+      "size": {
+        "0": 315,
+        "1": 350
+      },
+      "flags": {},
+      "order": 7,
+      "mode": 0,
+      "outputs": [
+        {
+          "name": "completed_count",
+          "type": "INT",
+          "links": [],
+          "slot_index": 0
+        },
+        {
+          "name": "output_directory",
+          "type": "DIRECTORY_DATA",
+          "links": [],
+          "slot_index": 1
+        },
+        {
+          "name": "results_json",
+          "type": "STRING",
+          "links": [],
+          "slot_index": 2
+        },
+        {
+          "name": "output_urls_json",
+          "type": "STRING",
+          "links": [],
+          "slot_index": 3
+        }
+      ],
+      "properties": {},
+      "widgets_values": [
+        "",
+        "s3://my-bucket/lipsynced_shots/",
+        "https://api.sync.so/v2/generate",
+        "/path/to/output/lipsynced_shots",
+        1,
+        0,
+        15,
+        true,
+        180,
+        true,
+        true
+      ],
+      "inputs": [
+        {
+          "name": "manifest_path",
+          "type": "STRING",
+          "widget": null,
+          "link": 7
+        },
+        {
+          "name": "custom_output_folder",
+          "type": "STRING",
+          "widget": null,
+          "link": null
+        },
+        {
+          "name": "credentials",
+          "type": "CREDENTIALS",
+          "widget": null,
+          "link": 8
+        }
+      ],
+      "title": "Sync Custom Endpoint",
+      "notes": "Processes shots through Sync.so Custom Endpoint. Set custom_output_folder to S3 path where outputs should be saved."
+    }
+  ],
+  "links": [
+    [
+      1,
+      2,
+      0,
+      3,
+      0,
+      "VIDEO_DATA"
+    ],
+    [
+      2,
+      3,
+      0,
+      4,
+      0,
+      "DIRECTORY_DATA"
+    ],
+    [
+      3,
+      4,
+      0,
+      5,
+      0,
+      "DIRECTORY_DATA"
+    ],
+    [
+      4,
+      5,
+      0,
+      6,
+      0,
+      "DIRECTORY_DATA"
+    ],
+    [
+      6,
+      1,
+      0,
+      6,
+      1,
+      "CREDENTIALS"
+    ],
+    [
+      7,
+      6,
+      1,
+      8,
+      0,
+      "STRING"
+    ],
+    [
+      8,
+      1,
+      0,
+      8,
+      2,
+      "CREDENTIALS"
+    ]
+  ],
+  "groups": [],
+  "config": {},
+  "extra": {},
+  "version": 0.4,
+  "id": "c3d4e5f6-a7b8-9012-cdef-123456789012",
+  "revision": 0
+}

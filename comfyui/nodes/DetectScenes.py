@@ -57,7 +57,6 @@ class DetectScenes:
             video_path: str = "", audio_path: str = "", output_dir: str = ""):
         """Run scene detection"""
         try:
-            # Import here to avoid issues if sync-toolkit not available
             from video.detect_scenes import (
                 need, ffprobe_duration, detect_cuts_ffmpeg,
                 detect_cuts_pyscenedetect, coalesce, build_segments,
@@ -65,6 +64,7 @@ class DetectScenes:
             )
             
             # Extract video path from VIDEO_DATA or use legacy string input
+            video_in = None
             if video_data and not video_data.get("error"):
                 video_in = normalize_path(video_data.get("primary_file", ""))
             elif video_path:

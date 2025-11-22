@@ -40,15 +40,14 @@ format_error = _comfyui_utils.format_error
 
 
 class GroupByFace:
-    """Group video clips by detected faces and optionally organize them"""
     
     @classmethod
     def INPUT_TYPES(cls):
         return {
-            "required": {
-                "input_dir": ("STRING", {"default": ""}),
-            },
+            "required": {},
             "optional": {
+                "directory_data": ("DIRECTORY_DATA", {"default": None}),
+                "input_dir": ("STRING", {"default": ""}),  # Legacy support
                 "output_json": ("STRING", {"default": ""}),
                 "eps": ("FLOAT", {"default": 0.35, "min": 0.0, "max": 1.0, "step": 0.01}),
                 "min_samples": ("INT", {"default": 2, "min": 1}),
@@ -60,28 +59,42 @@ class GroupByFace:
             }
         }
     
-    RETURN_TYPES = ("STRING", "INT", "STRING")
-    RETURN_NAMES = ("groups_json", "group_count", "output_directory")
+    RETURN_TYPES = ("DIRECTORY_DATA", "INT", "STRING")
+    RETURN_NAMES = ("output_directory", "group_count", "groups_json")
     FUNCTION = "run"
     CATEGORY = "sync-toolkit/video"
     
-    def run(self, input_dir: str, output_json: str = "", eps: float = 0.35,
-            min_samples: int = 2, organize: bool = False, organize_output: str = "",
-            move: bool = False, symlink: bool = False, num_frames: int = 10):
+    def run(self, directory_data: dict = None, input_dir: str = "", output_json: str = "",
+            eps: float = 0.35, min_samples: int = 2, organize: bool = False,
+            organize_output: str = "", move: bool = False, symlink: bool = False,
+            num_frames: int = 10):
         """Run face grouping"""
         try:
             from video.group_by_face import (
                 group_clips_by_face_clustering, organize_clips
             )
             
-            input_path = normalize_path(input_dir)
-            if not input_path.exists() or not input_path.is_dir():
-                return ("ERROR: Input directory not found", 0, "")
+            # Extract directory path from DIRECTORY_DATA or legacy string input
+            input_path = None
+            if directory_data and not directory_data.get("error"):
+                input_path = normalize_path(directory_data.get("path", ""))
+            elif input_dir:
+                input_path = normalize_path(input_dir)
+            else:
+                return ({"error": "ERROR: Directory path required"}, 0, "")
             
-            # Get video clips
-            video_files = list(input_path.glob("*.mov")) + list(input_path.glob("*.mp4"))
+            if not input_path.exists() or not input_path.is_dir():
+                return ({"error": "ERROR: Directory not found"}, 0, "")
+            
+            # Get video clips (use files from directory_data if available, otherwise scan)
+            if directory_data and not directory_data.get("error") and directory_data.get("files"):
+                video_files = [normalize_path(f) for f in directory_data.get("files", [])]
+                video_files = [f for f in video_files if f.exists() and f.suffix.lower() in ['.mov', '.mp4']]
+            else:
+                video_files = list(input_path.glob("*.mov")) + list(input_path.glob("*.mp4"))
+            
             if not video_files:
-                return ("ERROR: No video files found in input directory", 0, "")
+                return ({"error": "ERROR: No video files found"}, 0, "")
             
             # Group clips using the actual function signature
             clip_paths = [str(f) for f in video_files]
@@ -99,9 +112,10 @@ class GroupByFace:
             # Convert groups to JSON format
             groups_data = {}
             for group_id, clips in groups.items():
-                groups_data[group_id] = clips
+                groups_data[group_id] = [str(f) for f in clips]
             
             # Save JSON
+            import json
             if output_json:
                 json_path = normalize_path(output_json)
             else:
@@ -114,12 +128,12 @@ class GroupByFace:
             groups_json_str = json.dumps(groups_data)
             
             # Organize if requested
-            output_directory = str(input_path)
+            output_path = input_path
             if organize:
                 if organize_output:
                     org_output = normalize_path(organize_output)
                 else:
-                    org_output = input_path / "organized"
+                    org_output = input_path / "Grouped"
                 
                 # organize_clips expects copy_files (not move) and create_symlinks
                 organize_clips(
@@ -128,10 +142,19 @@ class GroupByFace:
                     copy_files=not move and not symlink,
                     create_symlinks=symlink
                 )
-                output_directory = ensure_absolute_path(org_output)
+                output_path = org_output
             
-            return (groups_json_str, group_count, output_directory)
+            # Get output files
+            output_files = list(output_path.glob("*.mov")) + list(output_path.glob("*.mp4"))
+            
+            # Return DIRECTORY_DATA structure
+            directory_data = {
+                "path": ensure_absolute_path(output_path),
+                "file_count": len(output_files),
+                "files": [ensure_absolute_path(f) for f in output_files],
+            }
+            
+            return (directory_data, group_count, groups_json_str)
             
         except Exception as e:
-            return (format_error(e), 0, "")
-
+            return ({"error": format_error(e)}, 0, "")
